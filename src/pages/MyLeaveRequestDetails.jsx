@@ -1,93 +1,44 @@
-import { useNavigate } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { myPendingRequestDetail } from '../data/mockData'
+import StatusBadge from '../components/StatusBadge'
+import Modal from '../components/Modal'
+import { myLeaveHistory, myPendingRequestDetail } from '../data/mockData'
 
-export default function MyLeaveRequestDetails() {
-  const navigate = useNavigate()
-  const d = myPendingRequestDetail
+export default function MyLeaveRequestDetails(){
+  const navigate=useNavigate()
+  const {requestId}=useParams()
+  const history=useMemo(()=>myLeaveHistory.find(r=>r.requestId===requestId),[requestId])
+  const pending=requestId===myPendingRequestDetail.requestId
+  const [open,setOpen]=useState(false)
+  const [reason,setReason]=useState('')
+  const cancelledIds=JSON.parse(localStorage.getItem('lm-cancelled-my-leave')||'[]')
+  const [cancelled,setCancelled]=useState(cancelledIds.includes(requestId))
+  const status=cancelled?'Cancelled':(history?.status||myPendingRequestDetail.status)
+  const type=history?.type||myPendingRequestDetail.type
+  const dates=history?.dates||myPendingRequestDetail.dates
+  const duration=history?.duration||myPendingRequestDetail.duration
 
-  return (
-    <Layout
-      title="Leave Request Details"
-      subtitle="Track your own leave request while it is reviewed by higher-level management."
-      actions={<span className="badge bg-gray-100 text-gray-700">{d.status}</span>}
-    >
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 card">
-          <h2 className="text-lg font-semibold">{d.type} · {d.dates}</h2>
-          <p className="text-xs text-gray-500 mb-4">Request ID: {d.requestId}</p>
-
-          <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
-            <div>
-              <div className="text-xs text-gray-500 uppercase font-medium">Duration</div>
-              <div className="font-semibold">{d.duration}</div>
-            </div>
-            <div>
-              <div className="text-xs text-gray-500 uppercase font-medium">Submitted</div>
-              <div className="font-semibold">{d.submitted}</div>
-            </div>
-            <div>
-              <div className="text-xs text-gray-500 uppercase font-medium">Current Balance</div>
-              <div className="font-semibold">{d.currentBalance} days</div>
-            </div>
-            <div>
-              <div className="text-xs text-gray-500 uppercase font-medium">Balance If Approved</div>
-              <div className="font-semibold">{d.balanceIfApproved} days</div>
-            </div>
-          </div>
-
-          <h3 className="text-sm font-semibold mb-2">Approval Progress</h3>
-          <div className="flex flex-col gap-2 mb-4">
-            <div className="bg-green-100 text-green-900 rounded-lg px-4 py-2 text-sm">
-              <div className="font-medium">Request submitted</div>
-              <div className="text-xs opacity-70">{d.submittedAt}</div>
-            </div>
-            <div className="bg-amber-100 text-amber-900 rounded-lg px-4 py-2 text-sm">
-              <div className="font-medium">Pending Approval</div>
-              <div className="text-xs opacity-70">Current step</div>
-            </div>
-            <div className="bg-gray-100 text-gray-500 rounded-lg px-4 py-2 text-sm">
-              <div className="font-medium">Approved / Rejected</div>
-              <div className="text-xs opacity-70">Waiting for current step</div>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-xs text-gray-600">
-            <span className="font-medium text-gray-800">Cancellation — </span>
-            Cancel request → mandatory cancellation reason required. Cancelled requests remain in history for audit.
-          </div>
+  return <Layout breadcrumb="Manager / My Leave / Request Details" title="Leave Request Details" subtitle="Track your own leave request and its approval history.">
+    <div className="request-detail-grid">
+      <section className="panel">
+        <div className="request-title"><div><h2>{type}</h2><p>{dates} • Request ID: {requestId}</p></div><StatusBadge label={status}/></div>
+        <div className="detail-stats">
+          <div><span>Duration</span><strong>{duration}</strong></div>
+          <div><span>Submitted</span><strong>{pending?myPendingRequestDetail.submitted:'Historical request'}</strong></div>
+          <div><span>Current Balance</span><strong>{pending?`${myPendingRequestDetail.currentBalance} days`:'—'}</strong></div>
+          <div><span>Balance if approved</span><strong>{pending?`${myPendingRequestDetail.balanceIfApproved} days`:'—'}</strong></div>
         </div>
-
-        <div className="flex flex-col gap-6">
-          <div className="card">
-            <h2 className="text-lg font-semibold mb-3">Approval updates</h2>
-            <div className="text-sm mb-3">
-              <div className="font-medium">Request submitted successfully</div>
-              <div className="text-xs text-gray-500">Your higher-level approver has been notified.</div>
-            </div>
-            <div className="text-sm mb-4">
-              <div className="font-medium">Pending approval</div>
-              <div className="text-xs text-gray-500">You may cancel while pending; a cancellation reason is required.</div>
-            </div>
-            <button className="btn-secondary w-full">Cancel Request</button>
-          </div>
-
-          <div className="card">
-            <h2 className="text-lg font-semibold mb-2">What happens next?</h2>
-            <p className="text-sm text-gray-600">
-              A manager cannot approve their own leave. The request is routed to the next reporting manager or
-              configured higher-level management approver. Once the final approver approves it, the balance is
-              updated and the leave appears in the team calendar.
-            </p>
-          </div>
-        </div>
+        <h3>Approval Progress</h3>
+        {pending&&!cancelled?<div className="progress-steps"><div className="progress-step done"><i>1</i><div><strong>Request submitted</strong><span>{myPendingRequestDetail.submittedAt}</span></div></div><div className="progress-line done"/><div className="progress-step current"><i>2</i><div><strong>Pending Approval</strong><span>Current step</span></div></div><div className="progress-line"/><div className="progress-step"><i>3</i><div><strong>Approved / Rejected</strong><span>Waiting for current step</span></div></div></div>:
+        <div className={`historical-status ${status.toLowerCase()}`}><strong>{status}</strong><span>{status==='Completed'?'This leave request was completed.':status==='Rejected'?'This request was rejected by the approver.':'This request was cancelled and retained for audit.'}</span></div>}
+      </section>
+      <div className="stack">
+        <section className="panel"><h2>Approval updates</h2><p className="muted">A manager cannot approve their own leave. Requests are routed to the next reporting manager or configured higher-level approver.</p>{pending&&!cancelled&&<button className="btn-danger full" onClick={()=>setOpen(true)}>Cancel Request</button>}{cancelled&&<div className="success-message">Request cancelled and retained in history.</div>}</section>
+        <section className="panel"><h2>What happens next?</h2><p className="muted">{pending?'Once the higher-level approver decides, your balance and team calendar are updated automatically.':'This is a historical request. Its outcome remains visible for your records and audit history.'}</p></section>
       </div>
-
-      <div className="mt-6">
-        <button className="btn-secondary" onClick={() => navigate('/my-leave')}>
-          Back to My Leave
-        </button>
-      </div>
-    </Layout>
-  )
+    </div>
+    <button className="btn-secondary top-gap" onClick={()=>navigate('/my-leave')}>Back to My Leave</button>
+    <Modal open={open} title="Cancel leave request" onClose={()=>setOpen(false)} actions={<><button className="btn-secondary" onClick={()=>setOpen(false)}>Keep Request</button><button className="btn-danger" disabled={!reason.trim()} onClick={()=>{const ids=JSON.parse(localStorage.getItem('lm-cancelled-my-leave')||'[]');if(!ids.includes(requestId))ids.push(requestId);localStorage.setItem('lm-cancelled-my-leave',JSON.stringify(ids));setCancelled(true);setOpen(false)}}>Confirm Cancellation</button></>}><label className="field-label">Cancellation reason *</label><textarea className="textarea" rows="4" value={reason} onChange={e=>setReason(e.target.value)} placeholder="Enter your reason"/><p className="field-help">For a personal reason, detailed justification is not required — you may enter only “Personal”.</p></Modal>
+  </Layout>
 }

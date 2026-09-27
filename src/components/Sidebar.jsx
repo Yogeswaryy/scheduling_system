@@ -1,47 +1,49 @@
-import { NavLink } from 'react-router-dom'
-import { currentManager } from '../data/mockData'
+import { useState } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import Icon from './Icon'
+import Modal from './Modal'
 
 const NAV_ITEMS = [
-  { label: 'Home', to: '/' },
-  { label: 'Approvals', to: '/approvals' },
-  { label: 'Team', to: '/team' },
-  { label: 'Leave Calendar', to: '/calendar' },
-  { label: 'Leave Taken Dashboard', to: '/leave-dashboard' },
-  { label: 'My Leave', to: '/my-leave' },
-  { label: 'Profile', to: '/profile' },
+  { label: 'Home', to: '/', icon: 'home' },
+  { label: 'Approvals', to: '/approvals', icon: 'approvals' },
+  { label: 'Team', to: '/team', icon: 'team' },
+  { label: 'Leave Calendar', to: '/calendar', icon: 'calendar' },
+  { label: 'Employee Details', to: '/employee-details', icon: 'employee' },
+  { label: 'Leave Taken Dashboard', to: '/leave-dashboard', icon: 'chart' },
+  { label: 'My Leave', to: '/my-leave', icon: 'leave' },
+  { label: 'Profile', to: '/profile', icon: 'profile' },
 ]
 
 export default function Sidebar() {
-  return (
-    <aside className="w-56 shrink-0 border-r border-gray-200 bg-white min-h-screen px-3 py-4">
-      <div className="card mb-4 text-center py-4 text-sm font-semibold text-gray-500">
-        LOGO / PRODUCT
-      </div>
+  const navigate=useNavigate()
+  const [logoutOpen,setLogoutOpen]=useState(false)
+  const logout=()=>{
+    localStorage.setItem('lm-auth','false')
+    setLogoutOpen(false)
+    navigate('/login',{replace:true})
+  }
 
-      <nav className="flex flex-col gap-1">
+  return (
+    <aside className="sidebar">
+      <div className="brand">
+        <div className="brand-mark">LM</div>
+        <div><strong>Leave Management</strong><span>Manager Portal</span></div>
+      </div>
+      <nav className="sidebar-nav">
         {NAV_ITEMS.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === '/'}
-            className={({ isActive }) =>
-              `px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                isActive
-                  ? 'bg-gray-200 border-gray-300 text-gray-900'
-                  : 'border-transparent text-gray-700 hover:bg-gray-100'
-              }`
-            }
-          >
-            {item.label}
+          <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <Icon name={item.icon} size={19} />
+            <span>{item.label}</span>
           </NavLink>
         ))}
       </nav>
-
-      <div className="mt-6 px-3 text-xs text-gray-400">
-        Signed in as
-        <div className="text-gray-600 font-medium">{currentManager.name}</div>
-        <div>{currentManager.role}</div>
+      <div className="sidebar-footer-stack">
+        <div className="sidebar-footer"><div className="tiny-dot online"/><span>System connected</span></div>
+        <button className="logout-btn" onClick={()=>setLogoutOpen(true)}><Icon name="logout" size={18}/><span>Log out</span></button>
       </div>
+      <Modal open={logoutOpen} title="Log out?" onClose={()=>setLogoutOpen(false)} size="sm" actions={<><button className="btn-secondary" onClick={()=>setLogoutOpen(false)}>Stay signed in</button><button className="btn-danger" onClick={logout}>Log out</button></>}>
+        <p className="muted">You will return to the sign-in page. Unsaved changes on the current page will be lost.</p>
+      </Modal>
     </aside>
   )
 }

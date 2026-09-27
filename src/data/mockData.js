@@ -1,29 +1,29 @@
-// Mock data for the Manager Portal.
-// Replace these exports with real API calls (e.g. React Query / fetch to the
-// HR / Employee / IT system APIs) when this is wired up to the backend.
-
 export const currentManager = {
   id: 'EMP-002',
   name: 'Jane Doe',
+  initials: 'JD',
   role: 'IT Manager',
   email: 'jane.doe@company.com',
   group: 'Operations',
-  reportsTo: 'Director',
+  scopeLabel: 'Operations + Warehouse',
+  workingPattern: 'Mon–Fri',
+  workingDays: [1,2,3,4,5],
+  whatsapp: 'Linked',
 }
 
 export const kpis = {
   peopleScheduledToday: 38,
-  onLeaveToday: { total: 5, annual: 3, sick: 2 },
+  onLeaveToday: { total: 5, annual: 3, mc: 2 },
   pendingApprovals: 8,
   coverageAlerts: 2,
 }
 
 export const weekAtAGlance = [
-  { day: 'Mon', offCount: 2, status: 'Coverage OK' },
-  { day: 'Tue', offCount: 3, status: '1 conflict' },
-  { day: 'Wed', offCount: 4, status: 'Coverage OK' },
-  { day: 'Thu', offCount: 5, status: 'Alert' },
-  { day: 'Fri', offCount: 2, status: 'Coverage OK' },
+  { day: 'Mon', offCount: 2, status: 'Coverage OK', tone: 'good' },
+  { day: 'Tue', offCount: 3, status: '1 conflict', tone: 'warn' },
+  { day: 'Wed', offCount: 4, status: 'Coverage OK', tone: 'good' },
+  { day: 'Thu', offCount: 5, status: 'Coverage alert', tone: 'bad' },
+  { day: 'Fri', offCount: 2, status: 'Coverage OK', tone: 'good' },
 ]
 
 export const coverageSettings = {
@@ -34,67 +34,25 @@ export const coverageSettings = {
 }
 
 export const leaveRequests = [
-  {
-    id: 'LR-2026-01040',
-    employee: 'Amanda Lee',
-    role: 'Senior Executive',
-    team: 'Operations / Team A',
-    dates: ['12 Oct 2026', '13 Oct 2026', '14 Oct 2026'],
-    type: 'Annual',
-    impact: 'Low',
-    status: 'Pending Approval',
-  },
-  {
-    id: 'LR-2026-01041',
-    employee: 'Kumar Ravi',
-    role: 'Operations Executive',
-    team: 'Operations / Team A',
-    dates: ['13 Oct 2026'],
-    type: 'Sick',
-    impact: 'Medium',
-    status: 'Pending Approval',
-  },
-  {
-    id: 'LR-2026-01042',
-    employee: 'Nora Smith',
-    role: 'Team Lead',
-    team: 'Operations / Team A',
-    dates: ['12 Oct 2026', '13 Oct 2026', '14 Oct 2026'],
-    type: 'Emergency',
-    impact: 'High',
-    status: 'Pending Approval',
-    minStaffingRequired: 8,
-    currentAvailable: 7,
-    shortageIfApproved: 1,
-    coverageStatus: 'Amber',
-    primaryBackup: 'Amanda Lee',
-    secondaryBackup: 'Kumar Ravi',
-  },
-  {
-    id: 'LR-2026-01043',
-    employee: 'Jason Lim',
-    role: 'Operations Executive',
-    team: 'Warehouse',
-    dates: ['20 Oct 2026'],
-    type: 'Unpaid',
-    impact: 'Low',
-    status: 'Pending Approval',
-  },
+  { id: 'LR-2026-01040', employee: 'Amanda Lee', role: 'Senior Executive', team: 'Operations / Team A', dates: ['12 Oct 2026', '13 Oct 2026', '14 Oct 2026'], type: 'Annual', impact: 'Low', status: 'Pending Approval' },
+  { id: 'LR-2026-01041', employee: 'Kumar Ravi', role: 'Operations Executive', team: 'Operations / Team A', dates: ['13 Oct 2026'], type: 'MC', impact: 'Medium', status: 'Pending Approval' },
+  { id: 'LR-2026-01042', employee: 'Nora Smith', role: 'Team Lead', team: 'Operations / Team A', dates: ['15 Oct 2026', '16 Oct 2026', '17 Oct 2026', '18 Oct 2026'], type: 'Emergency', impact: 'High', status: 'Pending Approval', minStaffingRequired: 8, currentAvailable: 7, shortageIfApproved: 1, coverageStatus: 'Amber', primaryBackup: 'Amanda Lee', secondaryBackup: 'Kumar Ravi' },
+  { id: 'LR-2026-01043', employee: 'Jason Lim', role: 'Operations Executive', team: 'Operations / Team A', dates: ['20 Oct 2026'], type: 'Unpaid', impact: 'Low', status: 'Pending Approval' },
 ]
 
-// Detailed hierarchy / coverage data for the selected request (Nora Smith's leave)
-export const teamHierarchy = {
-  selectedEmployee: {
-    name: 'Nora Smith',
-    role: 'Team Lead',
-    team: 'Operations / Team A',
-  },
-  reportsTo: 'Sarah Lim',
-  directReports: [
-    { name: 'Amanda Lee', role: 'Senior Executive', status: 'Available', canCover: 'Yes', workload: 'Medium' },
-    { name: 'Kumar Ravi', role: 'Operations Executive', status: 'Available', canCover: 'Partial', workload: 'High' },
-    { name: 'Jason Lim', role: 'Operations Executive', status: 'On Leave', onLeaveDate: '13 Oct 2026', canCover: 'No' },
-    { name: 'Mia Tan', role: 'Support Executive', status: 'Available', canCover: 'Support Tasks', workload: 'Low' },
+export const coverageHierarchy = {
+  name: 'Nora Smith', role: 'Team Lead', status: 'Working', team: 'Operations / Team A',
+  children: [
+    {
+      name: 'Amanda Lee', role: 'Senior Executive', status: 'Available', canCover: 'Yes', workload: 'Medium',
+      children: [
+        { name: 'Kumar Ravi', role: 'Operations Executive', status: 'Available', canCover: 'Partial', workload: 'High', children: [] },
+        {
+          name: 'Jason Lim', role: 'Operations Executive', status: 'On Leave', onLeaveDate: '13 Oct 2026', canCover: 'No',
+          children: [{ name: 'Mia Tan', role: 'Support Executive', status: 'Available', canCover: 'Support Tasks', workload: 'Low', children: [] }],
+        },
+      ],
+    },
   ],
 }
 
@@ -106,158 +64,121 @@ export const coverageReplacementAnalysis = [
 ]
 
 export const teamStaffingImpact = [
-  { date: '12 Oct 2026', required: 8, available: 7, ifApproved: 6, result: -1, status: 'Amber' },
-  { date: '13 Oct 2026', required: 8, available: 7, ifApproved: 5, result: -3, status: 'Red' },
-  { date: '14 Oct 2026', required: 8, available: 7, ifApproved: 6, result: -1, status: 'Amber' },
+  { date: '15 Oct 2026', required: 8, available: 7, ifApproved: 6, result: -1, status: 'Amber' },
+  { date: '16 Oct 2026', required: 8, available: 7, ifApproved: 5, result: -3, status: 'Red' },
+  { date: '17 Oct 2026', required: 8, available: 7, ifApproved: 6, result: -1, status: 'Amber' },
 ]
 
-export const coverageRecommendation =
-  'Approve with replacement assigned to Amanda Lee. Shared support from Mia Tan. Flag 13 October 2026 as higher staffing risk.'
+export const coverageRecommendation = 'Approve with Amanda Lee assigned as primary replacement. Keep Mia Tan as support coverage and flag the highest-risk day for staffing review.'
 
-// Weekly team leave calendar
 export const calendarWeek = {
   weekLabel: 'Mon 12 — Sun 18 Oct 2026',
   days: ['Mon 12', 'Tue 13', 'Wed 14', 'Thu 15', 'Fri 16', 'Sat 17', 'Sun 18'],
   rows: [
-    {
-      employee: 'Amanda Lee',
-      team: 'Support',
-      entries: { 'Tue 13': 'Annual leave', 'Wed 14': 'Annual leave', 'Thu 15': 'Annual leave' },
-    },
-    {
-      employee: 'Kumar Ravi',
-      team: 'Ops',
-      entries: { 'Thu 15': 'Sick leave', 'Fri 16': 'Sick leave' },
-    },
-    {
-      employee: 'Nora Smith',
-      team: 'Ops',
-      entries: { 'Mon 12': 'Pending', 'Tue 13': 'Pending' },
-    },
-    {
-      employee: 'Jason Lim',
-      team: 'Warehouse',
-      entries: { 'Thu 15': 'Unpaid' },
-    },
-    {
-      employee: 'Sarah Ong',
-      team: 'Support',
-      entries: {
-        'Wed 14': 'Parental',
-        'Thu 15': 'Parental',
-        'Fri 16': 'Parental',
-        'Sat 17': 'Parental',
-        'Sun 18': 'Parental',
-      },
-    },
+    { employee: 'Amanda Lee', team: 'Operations', entries: { 'Tue 13': 'Annual leave', 'Wed 14': 'Annual leave', 'Thu 15': 'Annual leave' } },
+    { employee: 'Kumar Ravi', team: 'Operations', entries: { 'Thu 15': 'MC leave', 'Fri 16': 'MC leave' } },
+    { employee: 'Nora Smith', team: 'Operations', entries: { 'Mon 12': 'Pending', 'Tue 13': 'Pending' } },
+    { employee: 'Jason Lim', team: 'Operations', entries: { 'Thu 15': 'Unpaid' } },
+    { employee: 'Priya Menon', team: 'Warehouse', entries: { 'Wed 14': 'Maternity', 'Thu 15': 'Maternity', 'Fri 16': 'Maternity' } },
   ],
 }
 
-// Employee leave-taken analytics dashboard
+export const employees = [
+  { id:'EMP-001', name:'Sarah Lim', role:'Operations Manager', department:'Operations', reportsTo:'Director', workPattern:'Mon–Fri', availability:'Available', annual:[8,18], mc:[1.5,14], maternity:[0,12], unpaid:[0,12], balance:8.5, level:1 },
+  { id:'EMP-014', name:'Nora Smith', role:'Team Lead', department:'Operations', reportsTo:'Sarah Lim', workPattern:'Mon–Fri', availability:'Working', annual:[10,18], mc:[1,14], maternity:[0,12], unpaid:[0.5,12], balance:6.5, level:2 },
+  { id:'EMP-015', name:'Amanda Lee', role:'Senior Executive', department:'Operations', reportsTo:'Nora Smith', workPattern:'Mon–Fri', availability:'Working', annual:[6,18], mc:[2,14], maternity:[1.5,12], unpaid:[1,12], balance:7.5, level:3 },
+  { id:'EMP-016', name:'Kumar Ravi', role:'Operations Executive', department:'Operations', reportsTo:'Amanda Lee', workPattern:'Mon–Fri', availability:'Working', annual:[12.5,18], mc:[2,14], maternity:[0,12], unpaid:[0,12], balance:3.5, level:4 },
+  { id:'EMP-017', name:'Jason Lim', role:'Operations Executive', department:'Operations', reportsTo:'Amanda Lee', workPattern:'Mon–Fri', availability:'On Leave', annual:[8,18], mc:[3,14], maternity:[0,12], unpaid:[1,12], balance:6, level:4 },
+  { id:'EMP-018', name:'Mia Tan', role:'Support Executive', department:'Operations', reportsTo:'Jason Lim', workPattern:'Mon–Fri', availability:'Working', annual:[7,18], mc:[1,14], maternity:[0,12], unpaid:[0,12], balance:10, level:5 },
+  { id:'EMP-020', name:'Raj Kumar', role:'Warehouse Manager', department:'Warehouse', reportsTo:'Director', workPattern:'Mon–Fri', availability:'Available', annual:[12,18], mc:[0.5,14], maternity:[0,12], unpaid:[0,12], balance:5.5, level:1 },
+  { id:'EMP-021', name:'Priya Menon', role:'Shift Lead', department:'Warehouse', reportsTo:'Raj Kumar', workPattern:'Rotating Shift', availability:'Working', annual:[6,18], mc:[1,14], maternity:[0,12], unpaid:[0,12], balance:11, level:2 },
+  { id:'EMP-022', name:'Arjun Das', role:'Technician', department:'Warehouse', reportsTo:'Priya Menon', workPattern:'Shift A', availability:'On Leave', annual:[8,18], mc:[2,14], maternity:[0,12], unpaid:[0,12], balance:8, level:3 },
+  { id:'EMP-023', name:'Kavitha Rao', role:'Technician', department:'Warehouse', reportsTo:'Priya Menon', workPattern:'Shift B', availability:'Working', annual:[5,18], mc:[1,14], maternity:[0,12], unpaid:[0,12], balance:12, level:3 },
+]
+
+export const orgTree = [
+  {
+    id:'operations', label:'Operations', type:'department', children:[
+      { id:'sarah', label:'Sarah Lim', role:'Operations Manager', children:[
+        { id:'nora', label:'Nora Smith', role:'Team Lead', children:[
+          { id:'amanda', label:'Amanda Lee', role:'Senior Executive', children:[
+            { id:'kumar', label:'Kumar Ravi', role:'Operations Executive', children:[] },
+            { id:'jason', label:'Jason Lim', role:'Operations Executive', children:[
+              { id:'mia', label:'Mia Tan', role:'Support Executive', children:[] },
+            ] },
+          ] },
+        ] },
+      ] },
+    ]
+  },
+  {
+    id:'warehouse', label:'Warehouse', type:'department', children:[
+      { id:'raj', label:'Raj Kumar', role:'Warehouse Manager', children:[
+        { id:'priya', label:'Priya Menon', role:'Shift Lead', children:[
+          { id:'arjun', label:'Arjun Das', role:'Technician', children:[] },
+          { id:'kavitha', label:'Kavitha Rao', role:'Technician', children:[] },
+        ] },
+      ] },
+    ]
+  },
+]
+
 export const leaveDashboardSummary = {
   totalLeaveTaken: 48.5,
   averageLeavePerEmployee: 6.1,
   employeesOnLeave: 4,
   pendingLeave: 3,
-  highestUtilisation: { employee: 'Kumar Ravi', percent: 83 },
   lowBalanceEmployees: 2,
+  highestMc: { employee: 'Jason Lim', days: 3.0 },
+  unpaidTotal: 4.5,
+  highestUtilisation: { employee: 'Kumar Ravi', percent: 83 },
 }
 
 export const leaveTakenByEmployee = [
-  { employee: 'Amanda Lee', role: 'Senior Executive', annual: 5.0, sick: 1.0, other: 0.0, totalTaken: 6.0, pending: 2.0, available: 10.0, utilisation: 38 },
-  { employee: 'Kumar Ravi', role: 'Operations Executive', annual: 9.5, sick: 2.0, other: 1.0, totalTaken: 12.5, pending: 0.0, available: 2.5, utilisation: 83 },
-  { employee: 'Nora Smith', role: 'Team Lead', annual: 6.5, sick: 1.0, other: 0.0, totalTaken: 7.5, pending: 3.0, available: 8.5, utilisation: 47 },
-  { employee: 'Jason Lim', role: 'Operations Executive', annual: 4.0, sick: 3.0, other: 1.0, totalTaken: 8.0, pending: 1.0, available: 6.0, utilisation: 57 },
+  { employee:'Amanda Lee', role:'Senior Executive', annual:5, mc:1, other:0, totalTaken:6, pending:2, available:10, utilisation:38 },
+  { employee:'Kumar Ravi', role:'Operations Executive', annual:9.5, mc:2, other:1, totalTaken:12.5, pending:0, available:2.5, utilisation:83 },
+  { employee:'Nora Smith', role:'Team Lead', annual:6.5, mc:1, other:0, totalTaken:7.5, pending:3, available:8.5, utilisation:47 },
+  { employee:'Jason Lim', role:'Operations Executive', annual:4, mc:3, other:1, totalTaken:8, pending:1, available:6, utilisation:57 },
 ]
 
 export const leaveTypeDistribution = [
-  { type: 'Annual Leave', percent: 62 },
-  { type: 'Sick Leave', percent: 21 },
-  { type: 'Emergency Leave', percent: 9 },
-  { type: 'Unpaid Leave', percent: 8 },
+  { type:'Annual Leave', days:28.5 },
+  { type:'MC Leave', days:8.5 },
+  { type:'Emergency Leave', days:3.5 },
+  { type:'Maternity Leave', days:3.5 },
+  { type:'Unpaid Leave', days:4.5 },
 ]
 
 export const monthlyLeaveTrend = [
-  { month: 'Jan', days: 6 },
-  { month: 'Feb', days: 8 },
-  { month: 'Mar', days: 7 },
-  { month: 'Apr', days: 9 },
-  { month: 'May', days: 13 },
-  { month: 'Jun', days: 15 },
+  { month:'Jan', days:8 }, { month:'Feb', days:10 }, { month:'Mar', days:9 },
+  { month:'Apr', days:11 }, { month:'May', days:13 }, { month:'Jun', days:17 },
 ]
 
 export const upcomingLeaveOverview = [
-  { employee: 'Nora Smith', dates: '12, 13, 14 Oct 2026', duration: 3.0, type: 'Annual', status: 'Pending' },
-  { employee: 'Jason Lim', dates: '13 Oct 2026', duration: 1.0, type: 'Sick', status: 'Approved' },
-  { employee: 'Amanda Lee', dates: '18, 19 Oct 2026', duration: 2.0, type: 'Annual', status: 'Approved' },
+  { employee:'Nora Smith', dates:'15–18 Oct 2026', duration:2.0, type:'Annual', status:'Pending' },
+  { employee:'Jason Lim', dates:'20 Oct 2026', duration:1.0, type:'MC', status:'Approved' },
+  { employee:'Amanda Lee', dates:'22–23 Oct 2026', duration:2.0, type:'Annual', status:'Approved' },
 ]
 
 export const lowBalanceHighUsage = [
-  { employee: 'Kumar Ravi', available: 2.5, utilisation: 83, alert: 'High usage' },
-  { employee: 'Jason Lim', available: 1.0, utilisation: 92, alert: 'Low balance' },
+  { employee:'Kumar Ravi', available:2.5, utilisation:83, alert:'High usage' },
+  { employee:'Jason Lim', available:1.0, utilisation:92, alert:'Low balance' },
 ]
 
-// Employee & role hierarchy (Team page)
-export const orgHierarchy = {
-  name: 'Sarah Lim',
-  role: 'Operations Manager',
-  reportsTo: 'Director',
-  teamSize: '2 Team Leads',
-  availability: 'Available',
-  children: [
-    {
-      name: 'Nora Smith',
-      role: 'Team Lead',
-      reportsTo: 'Sarah Lim',
-      teamSize: '4 Employees',
-      availability: 'Leave 12–14 Oct',
-      coverage: 'Amber',
-      children: [
-        { name: 'Amanda Lee', role: 'Senior Executive', reportsTo: 'Nora Smith', teamSize: '0', availability: 'Working', coverage: 'Primary Backup' },
-        { name: 'Kumar Ravi', role: 'Operations Executive', reportsTo: 'Nora Smith', teamSize: '0', availability: 'Working', coverage: 'Secondary Backup' },
-      ],
-    },
-  ],
-}
-
-export const employeeDetailLookup = {
-  'Nora Smith': {
-    id: 'EMP-014',
-    role: 'Team Lead',
-    group: 'Operations / Team A',
-    reportsTo: 'Sarah Lim',
-    directReports: 4,
-    schedule: 'Mon–Fri',
-    upcomingLeave: '12, 13, 14 Oct 2026',
-    leaveBalance: 8.5,
-    backup: 'Amanda Lee',
-    staffing: 'Available',
-  },
-}
-
-// Manager's own leave ("My Leave")
 export const myLeaveSummary = {
-  annualLeave: { available: 12, total: 18 },
-  sickLeave: { available: 8, total: 10 },
-  upcomingLeave: { days: 3, dates: '12, 13, 14 Oct 2026' },
-  pendingRequests: 1,
+  annualLeave:{ available:12, total:18 },
+  mcLeave:{ available:8, total:10 },
+  upcomingLeave:{ days:3, dates:'12, 13, 14 Oct 2026' },
+  pendingRequests:1,
 }
 
 export const myLeaveHistory = [
-  { type: 'Annual Leave', dates: '12, 13, 14 Oct', duration: '3 days', status: 'Pending', requestId: 'LR-2026-01042' },
-  { type: 'Sick Leave', dates: '2 Sep', duration: '1 day', status: 'Completed', requestId: 'LR-2026-00981' },
-  { type: 'Annual Leave', dates: '18, 19 Aug', duration: '2 days', status: 'Rejected', requestId: 'LR-2026-00873' },
+  { type:'Annual Leave', dates:'12, 13, 14 Oct', duration:'3 days', status:'Pending', requestId:'LR-2026-02001' },
+  { type:'MC Leave', dates:'2 Sep', duration:'1 day', status:'Completed', requestId:'LR-2026-00981' },
+  { type:'Annual Leave', dates:'18, 19 Aug', duration:'2 days', status:'Rejected', requestId:'LR-2026-00873' },
 ]
 
 export const myPendingRequestDetail = {
-  requestId: 'LR-2026-01042',
-  type: 'Annual Leave',
-  dates: '12, 13, 14 Oct',
-  duration: '3 working days',
-  submitted: '8 Oct 2026',
-  currentBalance: 12,
-  balanceIfApproved: 9,
-  status: 'Pending Higher-Level Approval',
-  approverStep: 'Pending Approval',
-  submittedAt: '8 Oct · 9:42 AM',
+  requestId:'LR-2026-02001', type:'Annual Leave', dates:'12, 13, 14 Oct', duration:'3 working days', submitted:'8 Oct 2026',
+  currentBalance:12, balanceIfApproved:9, status:'Pending Higher-Level Approval', submittedAt:'8 Oct · 9:42 AM',
 }
