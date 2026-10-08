@@ -1,152 +1,192 @@
-import { useRef, useState } from 'react'
-import Layout from '../components/Layout'
-import Icon from '../components/Icon'
-import Modal from '../components/Modal'
-import { currentManager } from '../data/mockData'
+import { useEffect, useRef, useState } from 'react';
+import { ChevronDown, Link2, Link2Off, ChevronRight } from 'lucide-react';
+import { useStore } from '../store/StoreContext';
+import { MANAGER } from '../lib/constants';
+import { fmtDateTime } from '../lib/dates';
+import { Confirm, Modal, PageTitle } from '../components/ui';
+
+function WhatsAppMenu({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const h = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false);
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+  const linked = value === 'linked';
+  return (
+    <div className="wa" ref={ref}>
+      <button className={`wa-btn ${linked ? 'ok' : 'bad'} ${open ? 'open' : ''}`} onClick={() => setOpen(!open)} aria-haspopup="listbox" aria-expanded={open}>
+        <span>{linked ? 'Linked' : 'De-Linked'}</span>
+        <ChevronDown size={16} />
+      </button>
+      {open && (
+        <ul className="wa-menu" role="listbox">
+          <li>
+            <button role="option" aria-selected={linked} className="ok" onClick={() => { onChange('linked'); setOpen(false); }}>
+              <Link2 size={14} /> Linked
+            </button>
+          </li>
+          <li>
+            <button role="option" aria-selected={!linked} className="bad" onClick={() => { onChange('delinked'); setOpen(false); }}>
+              <Link2Off size={14} /> De-Link
+            </button>
+          </li>
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function Profile() {
-  const [whatsapp, setWhatsapp] = useState(currentManager.whatsapp || 'Linked')
-  const [emailApproval, setEmailApproval] = useState(true)
-  const [photoMenu, setPhotoMenu] = useState(false)
-  const [photo, setPhoto] = useState('')
-  const [savedSnapshot,setSavedSnapshot]=useState({whatsapp:currentManager.whatsapp||'Linked',emailApproval:true,photo:''})
-  const [viewOpen, setViewOpen] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [passwordOpen,setPasswordOpen]=useState(false)
-  const [activityOpen,setActivityOpen]=useState(false)
-  const [passwords,setPasswords]=useState({current:'',next:'',confirm:''})
-  const [passwordMessage,setPasswordMessage]=useState('')
-  const fileRef = useRef(null)
-
-  const handleFile = (file) => {
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => setPhoto(reader.result)
-    reader.readAsDataURL(file)
-    setPhotoMenu(false)
-  }
-
-  const save = () => {
-    setSavedSnapshot({whatsapp,emailApproval,photo})
-    setSaved(true)
-    setTimeout(() => setSaved(false), 1800)
-  }
-
-  const discard=()=>{
-    setWhatsapp(savedSnapshot.whatsapp)
-    setEmailApproval(savedSnapshot.emailApproval)
-    setPhoto(savedSnapshot.photo)
-    setPhotoMenu(false)
-    setSaved(false)
-  }
-
-  const updatePassword=()=>{
-    if(!passwords.current||!passwords.next||!passwords.confirm){setPasswordMessage('Complete all password fields.');return}
-    if(passwords.next.length<8){setPasswordMessage('New password must be at least 8 characters.');return}
-    if(passwords.next!==passwords.confirm){setPasswordMessage('New password and confirmation do not match.');return}
-    setPasswordMessage('Password updated successfully.')
-    setPasswords({current:'',next:'',confirm:''})
-  }
+  const { state, actions } = useStore();
+  const saved = { whatsapp: state.settings.whatsapp, emailNotifications: state.settings.emailNotifications };
+  const [form, setForm] = useState(saved);
+  const [security, setSecurity] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const dirty = form.whatsapp !== saved.whatsapp || form.emailNotifications !== saved.emailNotifications;
 
   return (
-    <Layout
-      breadcrumb="Home / Profile"
-      title="Profile"
-      subtitle="Manage your personal details, communication preferences and account security."
-      actions={
-        <>
-          <button className="btn-secondary" onClick={discard}>Discard</button>
-          <button className="btn-primary" onClick={save}>{saved ? 'Saved ✓' : 'Save Changes'}</button>
-        </>
-      }
-    >
-      <section className="panel profile-card">
-        <div className="panel-head">
+    <div className="page profile">
+      <PageTitle
+        right={
+          <div className="row-actions">
+            <button className="btn" disabled={!dirty} onClick={() => setForm(saved)}>
+              Discard
+            </button>
+            <button
+              className="btn"
+              disabled={!dirty}
+              onClick={() => {
+                actions.saveSettings(form);
+                actions.toast('Profile settings saved');
+              }}
+            >
+              Save Changes
+            </button>
+          </div>
+        }
+       searchPlaceholder="Ask about account settings, notifications or security…"
+      >
+        Profile
+      </PageTitle>
+
+      <section className="glass card profile-card">
+        <h2 className="who-name">{MANAGER.name}</h2>
+        <p className="who-sub">
+          {MANAGER.role} • {MANAGER.email}
+        </p>
+        <div className="profile-fields">
           <div>
-            <h2>Update Profile</h2>
-            <p>Edit your account details and how your profile appears across the system.</p>
+            <div className="label">WhatsApp</div>
+            <WhatsAppMenu value={form.whatsapp} onChange={(v) => setForm({ ...form, whatsapp: v })} />
+          </div>
+          <div className="notif-box">
+            <span id="notif-label">Email approval notifications</span>
+            <button className={`switch ${form.emailNotifications ? 'on' : ''}`} role="switch" aria-checked={form.emailNotifications} aria-labelledby="notif-label" onClick={() => setForm({ ...form, emailNotifications: !form.emailNotifications })}>
+              <i />
+            </button>
           </div>
         </div>
+        <p className={`fineprint profile-dirty-note ${dirty ? 'visible' : ''}`} aria-live="polite">
+          {dirty ? 'You have unsaved changes.' : ''}
+        </p>
+      </section>
 
-        <div className="profile-main-row">
-          <div className="profile-identity">
-            <div className="profile-avatar-wrap">
-              <button className="profile-avatar" onClick={() => setPhotoMenu(v => !v)} aria-label="Profile photo actions">
-                {photo ? <img src={photo} alt="Profile" /> : <span>{currentManager.initials}</span>}
-                <span className="avatar-photo-trigger"><Icon name="camera" size={18} /></span>
+      <section className="glass card">
+        <h3>Account &amp; Security</h3>
+        <p className="fineprint">Sign in password and Whatsapp verification is required every 365 days. Reminders begin about 14–30 days before expiry.</p>
+        <div className="sec-list">
+          <button className="sec-item" onClick={() => setSecurity(true)}>
+            <span>
+              <b>Password &amp; sign-in</b>
+              <small>Change password, review sessions and sign-in activity.</small>
+            </span>
+            <ChevronRight size={18} />
+          </button>
+          <div className="sec-item static">
+            <span>
+              <b>Last login</b>
+              <small>{fmtDateTime(state.session.lastLogin).replace(/^[^,]+, /, 'Today • ')}</small>
+            </span>
+          </div>
+        </div>
+        <button className="link-btn demo-reset" onClick={() => setConfirmReset(true)}>
+          Reset demo data
+        </button>
+      </section>
+
+      {security && <SecurityModal onClose={() => setSecurity(false)} />}
+      {confirmReset && (
+        <Confirm title="Reset demo data?" confirmLabel="Reset" danger onClose={() => setConfirmReset(false)} onConfirm={() => actions.reset()}>
+          This restores the sample requests and clears any approvals, rejections and new leave you created in this browser.
+        </Confirm>
+      )}
+    </div>
+  );
+}
+
+function SecurityModal({ onClose }) {
+  const { state, actions } = useStore();
+  const [cur, setCur] = useState('');
+  const [next, setNext] = useState('');
+  const [again, setAgain] = useState('');
+  const [msg, setMsg] = useState(null);
+
+  const change = (e) => {
+    e.preventDefault();
+    if (!cur) return setMsg({ bad: true, t: 'Enter your current password.' });
+    if (next.length < 8) return setMsg({ bad: true, t: 'New password must be at least 8 characters.' });
+    if (next !== again) return setMsg({ bad: true, t: 'New passwords do not match.' });
+    if (next === cur) return setMsg({ bad: true, t: 'New password must differ from the current one.' });
+    // TODO: call the auth API here.
+    setCur('');
+    setNext('');
+    setAgain('');
+    setMsg({ t: 'Password updated.' });
+    actions.toast('Password updated');
+  };
+
+  return (
+    <Modal title="Password & sign-in" onClose={onClose} width={540}>
+      <form onSubmit={change} className="pw-form">
+        <label className="form-row">
+          Current password
+          <input className="field" type="password" autoComplete="current-password" value={cur} onChange={(e) => setCur(e.target.value)} />
+        </label>
+        <label className="form-row">
+          New password
+          <input className="field" type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} />
+        </label>
+        <label className="form-row">
+          Confirm new password
+          <input className="field" type="password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} />
+        </label>
+        {msg && <p className={msg.bad ? 'form-errors-line' : 'ok-line'}>{msg.t}</p>}
+        <button className="btn" type="submit">
+          Change password
+        </button>
+      </form>
+      <h4 className="sub-head">Active sessions</h4>
+      <ul className="session-list">
+        {state.session.devices.map((d) => (
+          <li key={d.id}>
+            <span>
+              <b>{d.name}</b>
+              <small>
+                {d.where} · {fmtDateTime(d.at)}
+              </small>
+            </span>
+            {d.current ? (
+              <em>This device</em>
+            ) : (
+              <button className="link-btn" onClick={() => actions.signOutDevice(d.id)}>
+                Sign out
               </button>
-
-              {photoMenu && (
-                <div className="photo-menu">
-                  <button onClick={() => { setViewOpen(true); setPhotoMenu(false) }}><Icon name="eye" size={17} />View Photo</button>
-                  <button onClick={() => fileRef.current?.click()}><Icon name="camera" size={17} />Change Photo</button>
-                  <button className="danger-item" onClick={() => { setPhoto(''); setPhotoMenu(false) }}><Icon name="trash" size={17} />Delete Photo</button>
-                </div>
-              )}
-              <input ref={fileRef} hidden type="file" accept="image/*" onChange={e => handleFile(e.target.files?.[0])} />
-            </div>
-
-            <div>
-              <h3>{currentManager.name}</h3>
-              <p>{currentManager.role} • {currentManager.email}</p>
-            </div>
-          </div>
-
-          <button className="btn-secondary" onClick={() => fileRef.current?.click()}><Icon name="camera" size={16}/>Change Photo</button>
-        </div>
-
-        <div className="profile-settings-row">
-          <label className="form-field whatsapp-field">
-            <span>WhatsApp</span>
-            <div className={`status-select ${whatsapp === 'Linked' ? 'linked' : 'delinked'}`}>
-              <Icon name={whatsapp === 'Linked' ? 'link' : 'unlink'} size={17}/>
-              <select value={whatsapp} onChange={e => setWhatsapp(e.target.value)}>
-                <option value="Linked">Linked</option>
-                <option value="De-linked">De-linked</option>
-              </select>
-              <Icon name="down" size={14}/>
-            </div>
-          </label>
-
-          <label className="form-field email-pref">
-            <span>Email approval notifications</span>
-            <button type="button" aria-pressed={emailApproval} className={`switch ${emailApproval ? 'on' : ''}`} onClick={() => setEmailApproval(v => !v)}><i/></button>
-          </label>
-        </div>
-      </section>
-
-      <section className="panel security-card">
-        <div className="panel-head">
-          <div>
-            <h2>Account & Security</h2>
-            <p>Password & WhatsApp re-verification are required every 366 days. Reminders begin about 14–30 days before expiry.</p>
-          </div>
-        </div>
-        <button className="security-row" onClick={()=>{setPasswordMessage('');setPasswordOpen(true)}}><Icon name="lock"/><div><strong>Password & sign-in</strong><span>Change password, review sessions and sign-in activity.</span></div><Icon name="chevron"/></button>
-        <button className="security-row" onClick={()=>setActivityOpen(true)}><Icon name="clock"/><div><strong>Last login</strong><span>Today • 1:32 PM</span></div><Icon name="chevron"/></button>
-      </section>
-
-      <Modal open={viewOpen} title="Profile Photo" onClose={() => setViewOpen(false)} size="sm">
-        <div className="photo-preview-large">
-          {photo ? <img src={photo} alt="Profile preview" /> : <div className="avatar avatar-xl">{currentManager.initials}</div>}
-        </div>
-      </Modal>
-
-      <Modal open={passwordOpen} title="Change password" onClose={()=>setPasswordOpen(false)} actions={<><button className="btn-secondary" onClick={()=>setPasswordOpen(false)}>Close</button><button className="btn-primary" onClick={updatePassword}>Update Password</button></>}>
-        <div className="stack compact-stack">
-          <label className="form-field"><span>Current password</span><input className="control" type="password" value={passwords.current} onChange={e=>setPasswords(v=>({...v,current:e.target.value}))}/></label>
-          <label className="form-field"><span>New password</span><input className="control" type="password" value={passwords.next} onChange={e=>setPasswords(v=>({...v,next:e.target.value}))}/></label>
-          <label className="form-field"><span>Confirm new password</span><input className="control" type="password" value={passwords.confirm} onChange={e=>setPasswords(v=>({...v,confirm:e.target.value}))}/></label>
-          {passwordMessage&&<div className={passwordMessage.includes('success')?'form-success':'form-error'}>{passwordMessage}</div>}
-        </div>
-      </Modal>
-
-      <Modal open={activityOpen} title="Sign-in activity" onClose={()=>setActivityOpen(false)} size="sm" actions={<button className="btn-secondary" onClick={()=>setActivityOpen(false)}>Done</button>}>
-        <div className="activity-list">
-          <div><strong>Current session</strong><span>Windows • Chrome • Today 1:32 PM</span><small className="status-text-success">Active</small></div>
-          <div><strong>Previous session</strong><span>Windows • Chrome • Yesterday 5:18 PM</span><small>Signed out</small></div>
-        </div>
-      </Modal>
-    </Layout>
-  )
+            )}
+          </li>
+        ))}
+      </ul>
+    </Modal>
+  );
 }

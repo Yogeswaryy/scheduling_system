@@ -1,44 +1,46 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import Icon from '../components/Icon'
-import { currentManager } from '../data/mockData'
+import { useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { useStore } from '../store/StoreContext';
+import { MANAGER } from '../lib/constants';
 
-export default function Login(){
-  const navigate=useNavigate()
-  const [email,setEmail]=useState(currentManager.email)
-  const [password,setPassword]=useState('manager123')
-  const [error,setError]=useState('')
+export default function Login() {
+  const { state, actions } = useStore();
+  const nav = useNavigate();
+  const [email, setEmail] = useState(MANAGER.email);
+  const [pw, setPw] = useState('');
+  const [err, setErr] = useState('');
 
-  const submit=(e)=>{
-    e.preventDefault()
-    if(!email.trim()||!password.trim()){
-      setError('Enter both email and password.')
-      return
-    }
-    localStorage.setItem('lm-auth','true')
-    navigate('/',{replace:true})
-  }
+  if (state.session.loggedIn) return <Navigate to="/" replace />;
 
-  return <div className="login-page">
-    <div className="login-shell">
-      <section className="login-brand-panel">
-        <div className="login-brand-mark">LM</div>
-        <h1>Leave Management</h1>
-        <p>Manager workspace for approvals, team coverage, leave planning and employee visibility.</p>
-        <div className="login-feature"><Icon name="approvals"/><span>Review leave requests with staffing impact</span></div>
-        <div className="login-feature"><Icon name="calendar"/><span>Plan leave around working days and team coverage</span></div>
-        <div className="login-feature"><Icon name="team"/><span>View reporting hierarchy and employee details</span></div>
-      </section>
-      <form className="login-card" onSubmit={submit}>
-        <div className="login-kicker">Manager Portal</div>
-        <h2>Welcome back</h2>
-        <p>Sign in to continue to your workspace.</p>
-        <label className="form-field"><span>Email</span><input className="control" value={email} onChange={e=>setEmail(e.target.value)} type="email" /></label>
-        <label className="form-field"><span>Password</span><input className="control" value={password} onChange={e=>setPassword(e.target.value)} type="password" /></label>
-        {error&&<div className="form-error">{error}</div>}
-        <button className="btn-primary login-submit" type="submit">Sign In</button>
-        <small className="login-note">Demo build: any non-empty password signs in as {currentManager.name}.</small>
+  return (
+    <div className="login-wrap">
+      <form
+        className="glass login-card"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!email.trim() || !pw) return setErr('Enter your email and password.');
+          // TODO: replace with the real auth call; any non-empty password works in the demo.
+          actions.login();
+          nav('/');
+        }}
+      >
+        <div className="logo big">L</div>
+        <h1>Manager sign in</h1>
+        <p className="fineprint">Leave Management System</p>
+        <label className="form-row">
+          Email
+          <input className="field" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" />
+        </label>
+        <label className="form-row">
+          Password
+          <input className="field" type="password" value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="current-password" autoFocus />
+        </label>
+        {err && <p className="form-errors-line">{err}</p>}
+        <button className="btn full" type="submit">
+          Sign in
+        </button>
+        <p className="fineprint">Demo: enter any password.</p>
       </form>
     </div>
-  </div>
+  );
 }
