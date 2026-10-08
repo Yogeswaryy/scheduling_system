@@ -78,6 +78,10 @@ export function seedState() {
     { e: 'Jason', t: 'unpaid', s: '2026-10-15', f: '2026-10-15', status: 'pending', sub: '2026-10-04T13:05:00' },
   ];
   explicit.forEach((x) => add({ employeeId: E[x.e], typeId: x.t, start: x.s, end: x.f, status: x.status, submittedAt: x.sub }));
+  const alternativeRequest = requests.find((r) => r.employeeId === E.Amanda && r.status === 'pending');
+  if (alternativeRequest) {
+    alternativeRequest.alternatives = [{ start: '2026-10-19', end: '2026-10-21', reason: 'Full staffing coverage is available.' }];
+  }
 
   /* ---- generated history for the team (Jan - Sep 2026) so analytics has substance ---- */
   const occupied = {};
@@ -168,7 +172,19 @@ export function seedState() {
     requests,
     holidays: HOLIDAYS,
     leaveTypes: LEAVE_TYPES,
-    settings: { maxOff: MAX_OFF, whatsapp: 'linked', emailNotifications: true, showNamesOnHover: true, calendarFavorites: ['e1', 'e2', 'e3'] },
+    settings: {
+      maxOff: MAX_OFF,
+      whatsapp: 'linked',
+      emailNotifications: true,
+      showNamesOnHover: true,
+      calendarFavorites: ['e1', 'e2', 'e3'],
+      leavePrivacy: 'namesAndType',
+      workingPattern: 'Monday to Friday',
+      unavailableDates: '',
+      canEditWorkingPattern: true,
+      rosterStatus: 'published',
+      rosterPublishedAt: `${TODAY}T09:00:00`,
+    },
     session: {
       loggedIn: true,
       lastLogin: `${TODAY}T13:32:00`,

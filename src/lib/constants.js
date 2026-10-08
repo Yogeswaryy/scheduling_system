@@ -53,7 +53,7 @@ export const BASE_EMPLOYEES = [
 ];
 
 export const POLICY = {
-  title: 'Code of Conduct',
+  title: 'Policy',
   updated: 'April 11, 2023',
   blocks: [
     { p: 'This Privacy Policy describes Our policies and procedures on the collection, use and disclosure of Your information when You use the Service and tells You about Your privacy rights and how the law protects You.' },

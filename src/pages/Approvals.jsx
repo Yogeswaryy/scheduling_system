@@ -91,6 +91,20 @@ export default function Approvals() {
             </p>
           )}
           {req.attachment && <p className="fineprint">Attachment: {req.attachment}</p>}
+          {req.alternatives?.length > 0 && (
+            <div className="alternative-dates">
+              <strong>Alternative leave dates</strong>
+              <p>The assessment service found lower-risk options:</p>
+              <ul>
+                {req.alternatives.map((option) => (
+                  <li key={`${option.start}-${option.end}`}>
+                    <b>{fmtDatesLong([option.start, option.end])}</b>
+                    <span>{option.reason}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
 
         <div className="stack">
@@ -129,7 +143,14 @@ export default function Approvals() {
           </section>
 
           <section className="glass card">
-            <h3>Team Staffing Impact</h3>
+            <div className="card-head wrap">
+              <h3>Team Staffing Impact</h3>
+              <div className="risk-key" aria-label="Staffing risk levels">
+                <span className="risk-green">Green · covered</span>
+                <span className="risk-amber">Amber · at minimum</span>
+                <span className="risk-red">Red · below minimum</span>
+              </div>
+            </div>
             <div className="table-wrap scroll-y">
               <table className="mini-table">
                 <thead>

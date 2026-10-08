@@ -17,7 +17,7 @@ export const displayStatus = (r) => (r.status === 'approved' && r.end < TODAY ? 
 export const STATUS_LABEL = {
   pending: 'Pending',
   approved: 'Approved',
-  rejected: 'Rejected',
+  rejected: 'Declined',
   cancelled: 'Cancelled',
   completed: 'Completed',
 };

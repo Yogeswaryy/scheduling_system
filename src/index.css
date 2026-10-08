@@ -233,7 +233,8 @@ button.stat:hover { transform: translateY(-2px); background: rgba(255, 255, 255,
 .seg button { border: 0; background: transparent; padding: 10px 18px; font-weight: 600; }
 .seg button.on { background: var(--black); color: #fff; }
 .month-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.month-nav .btn.icon { background: rgba(255, 255, 255, 0.75); color: var(--ink); border: 1px solid var(--line); }
+.month-nav .btn.icon { background: var(--black); color: #fff; border: 1px solid var(--black); }
+.month-nav .btn.light { background: var(--black); color: #fff; border-color: var(--black); }
 .month-label { font-size: 26px; font-weight: 600; margin: 0 8px; }
 .btn.light { padding: 10px 18px; }
 .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
@@ -306,7 +307,7 @@ textarea.field { resize: vertical; }
 .range-picker { position: absolute; top: calc(100% + 6px); right: 0; z-index: 40; background: #fff; border-radius: 8px; box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22); padding: 12px 14px; display: flex; gap: 20px; font-weight: 400; }
 .rp-month { width: 190px; }
 .rp-title { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; margin-bottom: 8px; min-height: 20px; }
-.rp-nav { border: 0; background: transparent; padding: 2px; display: grid; place-items: center; }
+.rp-nav { width: 24px; height: 24px; border: 1px solid var(--black); border-radius: 6px; background: var(--black); color: #fff; padding: 2px; display: grid; place-items: center; }
 .rp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
 .rp-dow { text-align: center; font-size: 10px; color: #8a8ea3; padding: 3px 0; }
 .rp-day { border: 0; background: transparent; font-size: 11px; height: 24px; border-radius: 999px; }
@@ -743,15 +744,16 @@ button.sec-item:hover { background: #fff; }
 .toasts { top: 20px; right: 20px; bottom: auto; align-items: flex-end; }
 .toast { min-width: 260px; max-width: 380px; }
 
-/* Today indicators: latest requirement keeps them circular, just resized consistently. */
+/* Today indicators: consistent compact squares across every calendar view. */
 .mg-cell.today .mg-num,
 .ap-num.tod,
-.wk-day.today .wk-day-num {
+.wk-day.today .wk-day-num,
+.rp-day.tod {
   width: 24px;
   height: 24px;
   min-width: 24px;
   padding: 0;
-  border-radius: 50%;
+  border-radius: 6px;
   display: inline-grid;
   place-items: center;
   background: var(--black);
@@ -804,13 +806,10 @@ button.sec-item:hover { background: #fff; }
 .custom-select.open .custom-select-trigger { box-shadow: 0 0 0 1px rgba(20,20,31,.18); }
 .custom-select.open .custom-select-trigger svg { transform: rotate(180deg); }
 .custom-select-menu {
-  position: absolute;
-  top: calc(100% + 5px);
-  left: 0;
-  right: 0;
-  z-index: 120;
-  max-height: min(360px, 60vh);
-  overflow-y: auto;
+  position: fixed;
+  z-index: 1000;
+  max-height: none;
+  overflow: visible;
   margin: 0;
   padding: 4px;
   border: 1px solid var(--black);
@@ -925,4 +924,113 @@ button.sec-item:hover { background: #fff; }
     inset 0 1px 0 rgba(255,255,255,.44),
     inset 0 -1px 0 rgba(0,0,0,.08),
     0 10px 26px rgba(32,28,61,.18);
+}
+
+/* ---------- Acceptance checklist consistency pass ---------- */
+:focus-visible { outline-color: var(--black); }
+
+/* All standard actions use the approved black control treatment. */
+.btn,
+.btn.reject,
+.btn.approve,
+.btn.danger,
+.btn.light,
+.btn.ghost,
+.btn.ghost-dark,
+.btn.primary-dark,
+.icon-btn {
+  background: var(--black);
+  border-color: var(--black);
+  color: #fff;
+}
+.btn:hover:not(:disabled),
+.icon-btn:hover { background: #24242c; color: #fff; }
+.tabs-mini button.on,
+.toggle2 button.on { background: var(--black); color: #fff; }
+.glance-row.is-today { box-shadow: inset 4px 0 0 var(--black); }
+
+/* Statuses stay readable at table density and remain visually distinct. */
+.data-table .pill,
+.mini-table .pill { padding: 7px 12px; font-size: 12.5px; }
+.pill::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 3px;
+  background: currentColor;
+  display: inline-block;
+}
+.pill-pending { background: #fff0cf; color: #8a5600; border: 1px solid #e5ad45; }
+.pill-approved { background: #d9f7e5; color: #08743d; border: 1px solid #6bc994; }
+.pill-completed { background: #e8eaf0; color: #3d4354; border: 1px solid #aeb4c3; }
+.pill-rejected { background: #ffe1e7; color: #a41538; border: 1px solid #e98ba2; }
+.pill-cancelled { background: #f0f0f2; color: #555762; border: 1px solid #bfc1c9; }
+
+.risk-key { display: flex; flex-wrap: wrap; gap: 7px; font-size: 11.5px; font-weight: 700; }
+.risk-key span { padding: 5px 8px; border-radius: 8px; border: 1px solid currentColor; }
+.risk-green { color: #08743d; background: #d9f7e5; }
+.risk-amber { color: #8a5600; background: #fff0cf; }
+.risk-red { color: #a41538; background: #ffe1e7; }
+.alternative-dates { margin-top: 16px; padding: 14px; border: 1px solid rgba(20,20,31,.18); border-radius: var(--radius-control); background: rgba(255,255,255,.55); }
+.alternative-dates > p { margin: 4px 0 9px; color: var(--muted); font-size: 12.5px; }
+.alternative-dates li { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; border-top: 1px solid var(--line); }
+.alternative-dates li span { color: var(--muted); font-size: 12px; }
+
+/* Page AI results use the same compact glass hierarchy as the main assistant. */
+.ai-page-results { width: min(100%, 760px); padding: 13px 16px; font-size: 13px; }
+.ai-page-results ul { display: flex; flex-direction: column; gap: 5px; }
+.ai-page-results a { font-weight: 700; text-decoration: underline; }
+
+.profile-preferences { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; width: 100%; margin-top: 18px; }
+.profile-preferences small { color: var(--muted); font-weight: 400; line-height: 1.4; }
+/* Notifications and modal pop-ups are anchored to the top-right. */
+.notification-center { position: fixed; top: 20px; right: 24px; z-index: 95; }
+.notification-trigger { position: relative; width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.7); border-radius: 14px; background: rgba(255,255,255,.66); color: var(--ink); box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 10px 28px rgba(32,28,61,.16); backdrop-filter: blur(16px); }
+.notification-trigger span { position: absolute; top: -5px; right: -5px; min-width: 19px; height: 19px; padding: 0 5px; display: grid; place-items: center; border-radius: 8px; background: var(--black); color: #fff; font-size: 10px; font-weight: 800; }
+.notification-panel { position: absolute; top: 52px; right: 0; width: 340px; padding: 15px; }
+.notification-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.notification-panel li { display: grid; grid-template-columns: 24px 1fr; gap: 9px; padding: 11px 4px; border-top: 1px solid var(--line); }
+.notification-panel li span { display: flex; flex-direction: column; gap: 2px; }
+.notification-panel li small { color: var(--muted); line-height: 1.35; }
+
+.modal-back { place-items: start end; padding: 20px; }
+.modal { margin-top: 52px; }
+.analytics-detail-table { max-height: 440px; overflow-y: auto; }
+.security-modal {
+  transform: scale(.86);
+  transform-origin: top right;
+  max-height: calc(100vh - 72px);
+}
+.security-modal .modal-head { padding: 15px 18px 6px; }
+.security-modal .modal-body { padding: 6px 18px 15px; }
+.security-modal .pw-form { gap: 9px; }
+.security-modal .field { padding-block: 11px; }
+.security-modal .sub-head { margin-top: 14px; }
+.security-modal .session-list li { padding-block: 7px; }
+
+@media (max-width: 900px) {
+  .profile-preferences { grid-template-columns: 1fr; }
+  .notification-center { top: 12px; right: 12px; }
+  .modal-back { padding: 12px; }
+  .modal { margin-top: 52px; }
+  .security-modal { transform: none; max-height: calc(100vh - 76px); }
+}
+
+/* Popup controls must remain visible before hover. */
+.modal .icon-btn,
+.modal .btn,
+.modal .btn.ghost,
+.modal .btn.ghost-dark,
+.modal .btn.light,
+.modal .btn.danger {
+  background: var(--black);
+  border-color: var(--black);
+  color: #fff;
+}
+.modal .icon-btn:hover,
+.modal .btn:hover:not(:disabled) {
+  background: #24242c;
+  border-color: #24242c;
+  color: #fff;
 }

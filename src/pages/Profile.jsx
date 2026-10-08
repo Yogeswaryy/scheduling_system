@@ -3,7 +3,7 @@ import { ChevronDown, Link2, Link2Off, ChevronRight } from 'lucide-react';
 import { useStore } from '../store/StoreContext';
 import { MANAGER } from '../lib/constants';
 import { fmtDateTime } from '../lib/dates';
-import { Confirm, Modal, PageTitle } from '../components/ui';
+import { Confirm, Modal, PageTitle, Select } from '../components/ui';
 
 function WhatsAppMenu({ value, onChange }) {
   const [open, setOpen] = useState(false);
@@ -40,11 +40,17 @@ function WhatsAppMenu({ value, onChange }) {
 
 export default function Profile() {
   const { state, actions } = useStore();
-  const saved = { whatsapp: state.settings.whatsapp, emailNotifications: state.settings.emailNotifications };
+  const saved = {
+    whatsapp: state.settings.whatsapp,
+    emailNotifications: state.settings.emailNotifications,
+    leavePrivacy: state.settings.leavePrivacy || 'namesAndType',
+    workingPattern: state.settings.workingPattern || 'Monday to Friday',
+    unavailableDates: state.settings.unavailableDates || '',
+  };
   const [form, setForm] = useState(saved);
   const [security, setSecurity] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
-  const dirty = form.whatsapp !== saved.whatsapp || form.emailNotifications !== saved.emailNotifications;
+  const dirty = JSON.stringify(form) !== JSON.stringify(saved);
 
   return (
     <div className="page profile">
@@ -87,6 +93,50 @@ export default function Profile() {
               <i />
             </button>
           </div>
+        </div>
+        <div className="profile-preferences">
+          <div className="form-row">
+            <span>Calendar leave visibility</span>
+            <Select
+              value={form.leavePrivacy}
+              onChange={(leavePrivacy) => setForm({ ...form, leavePrivacy })}
+              ariaLabel="Calendar leave visibility"
+              className="field-select"
+              options={[
+                { value: 'hidden', label: 'Hidden' },
+                { value: 'countOnly', label: 'Count Only' },
+                { value: 'names', label: 'Names' },
+                { value: 'namesAndType', label: 'Names and Type' },
+              ]}
+            />
+            <small>Applied to team leave information throughout the calendar.</small>
+          </div>
+          <div className="form-row">
+            <span>Working pattern</span>
+            <Select
+              value={form.workingPattern}
+              onChange={(workingPattern) => setForm({ ...form, workingPattern })}
+              ariaLabel="Working pattern"
+              className="field-select"
+              options={[
+                { value: 'Monday to Friday', label: 'Monday to Friday' },
+                { value: 'Sunday to Thursday', label: 'Sunday to Thursday' },
+                { value: 'Four-day week', label: 'Four-day week' },
+                { value: 'Flexible roster', label: 'Flexible roster' },
+              ]}
+            />
+          </div>
+          <label className="form-row">
+            <span>Unavailable dates</span>
+            <input
+              className="field"
+              value={form.unavailableDates}
+              onChange={(e) => setForm({ ...form, unavailableDates: e.target.value })}
+              placeholder="Example: 12 Oct, 18 Oct"
+              readOnly={!state.settings.canEditWorkingPattern}
+            />
+            <small>{state.settings.canEditWorkingPattern ? 'You have permission to update these dates.' : 'Contact an administrator to change these dates.'}</small>
+          </label>
         </div>
         <p className={`fineprint profile-dirty-note ${dirty ? 'visible' : ''}`} aria-live="polite">
           {dirty ? 'You have unsaved changes.' : ''}
@@ -148,7 +198,7 @@ function SecurityModal({ onClose }) {
   };
 
   return (
-    <Modal title="Password & sign-in" onClose={onClose} width={540}>
+    <Modal title="Password & sign-in" onClose={onClose} width={540} className="security-modal">
       <form onSubmit={change} className="pw-form">
         <label className="form-row">
           Current password

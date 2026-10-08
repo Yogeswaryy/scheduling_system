@@ -1,6 +1,9 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { STATUS_LABEL, displayStatus } from '../lib/calc';
+import { askAssistant } from '../lib/calc';
+import { useStore } from '../store/StoreContext';
 import { Check, ChevronDown, Send, X } from 'lucide-react';
 
 export function Select({ value, onChange, options, ariaLabel, className = '' }) {
@@ -8,11 +11,17 @@ export function Select({ value, onChange, options, ariaLabel, className = '' }) 
   const selectedIndex = Math.max(0, options.findIndex((option) => String(option.value) === String(value)));
   const [activeIndex, setActiveIndex] = useState(selectedIndex);
   const ref = useRef(null);
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
+  const [menuStyle, setMenuStyle] = useState({});
   const listId = useId();
   const selected = options[selectedIndex];
 
   useEffect(() => {
-    const close = (event) => ref.current && !ref.current.contains(event.target) && setOpen(false);
+    const close = (event) => {
+      if (ref.current?.contains(event.target) || menuRef.current?.contains(event.target)) return;
+      setOpen(false);
+    };
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
   }, []);
@@ -20,6 +29,31 @@ export function Select({ value, onChange, options, ariaLabel, className = '' }) 
   useEffect(() => {
     if (open) setActiveIndex(selectedIndex);
   }, [open, selectedIndex]);
+
+  useLayoutEffect(() => {
+    if (!open) return undefined;
+    let frame;
+    const positionMenu = () => {
+      const trigger = triggerRef.current;
+      if (!trigger) return;
+      const rect = trigger.getBoundingClientRect();
+      const menuHeight = menuRef.current?.offsetHeight || options.length * 38 + 12;
+      const roomBelow = window.innerHeight - rect.bottom - 8;
+      const roomAbove = rect.top - 8;
+      const openUpward = roomBelow < menuHeight && roomAbove > roomBelow;
+      const top = openUpward ? Math.max(8, rect.top - menuHeight - 5) : rect.bottom + 5;
+      setMenuStyle({ top, left: rect.left, width: rect.width });
+    };
+    positionMenu();
+    frame = requestAnimationFrame(positionMenu);
+    window.addEventListener('resize', positionMenu);
+    window.addEventListener('scroll', positionMenu, true);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', positionMenu);
+      window.removeEventListener('scroll', positionMenu, true);
+    };
+  }, [open, options.length]);
 
   const choose = (option) => {
     onChange(option.value);
@@ -62,6 +96,7 @@ export function Select({ value, onChange, options, ariaLabel, className = '' }) 
     <div className={`custom-select ${open ? 'open' : ''} ${className}`.trim()} ref={ref}>
       <button
         type="button"
+        ref={triggerRef}
         className="custom-select-trigger"
         aria-label={ariaLabel}
         aria-haspopup="listbox"
@@ -73,8 +108,8 @@ export function Select({ value, onChange, options, ariaLabel, className = '' }) 
         <span>{selected?.label}</span>
         <ChevronDown size={16} aria-hidden="true" />
       </button>
-      {open && (
-        <ul className="custom-select-menu" id={listId} role="listbox" aria-label={ariaLabel}>
+      {open && createPortal(
+        <ul ref={menuRef} className="custom-select-menu" id={listId} role="listbox" aria-label={ariaLabel} style={menuStyle}>
           {options.map((option, index) => {
             const isSelected = String(option.value) === String(value);
             return (
@@ -94,13 +129,24 @@ export function Select({ value, onChange, options, ariaLabel, className = '' }) 
               </li>
             );
           })}
-        </ul>
+        </ul>,
+        document.body
       )}
     </div>
   );
 }
 
 export function PageTitle({ children, right, searchPlaceholder }) {
+  const { state } = useStore();
+  const [query, setQuery] = useState('');
+  const [answer, setAnswer] = useState(null);
+
+  const search = () => {
+    const text = query.trim();
+    if (!text) return;
+    setAnswer({ query: text, ...askAssistant(state, text) });
+  };
+
   return (
     <div className="page-title-block">
       <div className="page-head">
@@ -112,14 +158,28 @@ export function PageTitle({ children, right, searchPlaceholder }) {
           className="ai-page-search"
           onSubmit={(e) => {
             e.preventDefault();
+            search();
           }}
         >
-          <input type="search" placeholder={searchPlaceholder} aria-label={`AI search for ${children}`} />
+          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={searchPlaceholder} aria-label={`AI search for ${children}`} />
           <button className="ask-go ai-page-send" type="submit" aria-label={`Send AI prompt for ${children}`}>
             <Send size={18} />
           </button>
         </form>
       ) : null}
+      {answer && (
+        <div className="ai-page-results glass" role="status">
+          <div className="answer-head">
+            <strong>{answer.title}</strong>
+            <button className="link-btn" type="button" onClick={() => setAnswer(null)}>Close</button>
+          </div>
+          <ul>
+            {answer.items.map((item, index) => (
+              <li key={index}>{item.to ? <Link to={item.to}>{item.text}</Link> : item.text}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -147,7 +207,7 @@ export function StatusPill({ request, status, long }) {
   return <span className={`pill pill-${s}`}>{long && s === 'pending' ? 'Pending Approval' : STATUS_LABEL[s]}</span>;
 }
 
-export function Modal({ title, onClose, children, actions, width = 520 }) {
+export function Modal({ title, onClose, children, actions, width = 520, className = '' }) {
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose();
     document.addEventListener('keydown', onKey);
@@ -155,7 +215,7 @@ export function Modal({ title, onClose, children, actions, width = 520 }) {
   }, [onClose]);
   return createPortal(
     <div className="modal-back" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" style={{ maxWidth: width }} role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`modal ${className}`.trim()} style={{ maxWidth: width }} role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-head">
           <h2>{title}</h2>
           <button className="icon-btn" onClick={onClose} aria-label="Close">

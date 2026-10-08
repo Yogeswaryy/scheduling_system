@@ -5,7 +5,7 @@ import { useStore } from '../store/StoreContext';
 import { MANAGER, typeById } from '../lib/constants';
 import { displayStatus, STATUS_LABEL } from '../lib/calc';
 import { fmtDatesShort, year } from '../lib/dates';
-import { Confirm, Empty, Modal, PageTitle, Select } from '../components/ui';
+import { Confirm, Empty, Modal, PageTitle, Select, StatusPill } from '../components/ui';
 
 const EMPTY_FILTER = { status: 'all', type: 'all', year: 'all' };
 
@@ -113,7 +113,7 @@ export default function History() {
                   <td>{fmtDatesShort(r.dates)}</td>
                   <td>{r.dates.length} {r.dates.length === 1 ? 'day' : 'days'}</td>
                   <td>
-                    <span className="status-text">{STATUS_LABEL[displayStatus(r)]}</span>
+                    <StatusPill request={r} />
                   </td>
                   <td>
                     <Link className="link-btn" to={`/request/${r.id}`}>

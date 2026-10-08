@@ -19,6 +19,15 @@ function load() {
             t.id === 'maternity' ? { ...t, name: 'Parental Leave', short: 'Parental', chip: 'Parental', analytics: 'Parental' } : t
           );
         }
+        s.settings = {
+          leavePrivacy: 'namesAndType',
+          workingPattern: 'Monday to Friday',
+          unavailableDates: '',
+          canEditWorkingPattern: true,
+          rosterStatus: 'published',
+          rosterPublishedAt: `${TODAY}T09:00:00`,
+          ...s.settings,
+        };
         return s;
       }
     }

@@ -24,7 +24,18 @@ export default function Calendar() {
   const [pendingMove, setPendingMove] = useState(null);
 
   const favoriteIds = state.settings.calendarFavorites || ['e1', 'e2', 'e3'];
+  const privacy = state.settings.leavePrivacy || 'namesAndType';
+  const showNames = privacy === 'names' || privacy === 'namesAndType';
+  const showTypes = privacy === 'namesAndType';
   const directIds = state.employees.map((e) => e.id);
+
+  const leaveLabel = (request, includeName = true) => {
+    if (request.employeeId === MANAGER.id || calendarMode === 'personal') return typeById(request.typeId).short;
+    if (privacy === 'hidden') return 'Unavailable';
+    if (privacy === 'countOnly') return '1 person off';
+    if (privacy === 'names') return includeName ? firstName(state, request.employeeId) : 'Leave';
+    return includeName ? `${firstName(state, request.employeeId)} - ${typeById(request.typeId).short}` : typeById(request.typeId).short;
+  };
 
   const scopeIds = useMemo(() => {
     if (calendarMode === 'personal') return [MANAGER.id];
@@ -87,7 +98,7 @@ export default function Calendar() {
         className={`lchip ${r.status}`}
         style={{ '--c': t.color, '--bg': t.bg }}
         onClick={() => setSel(r)}
-        title={`${personName(state, r.employeeId)} · ${t.name} (${r.status})`}
+        title={r.employeeId === MANAGER.id || showNames ? `${showNames ? personName(state, r.employeeId) : 'Your leave'}${showTypes || r.employeeId === MANAGER.id ? ` · ${t.name}` : ''} (${r.status})` : `Leave (${r.status})`}
         draggable
         onDragStart={(e) => beginDrag(e, r.id, originDate)}
       >
@@ -232,7 +243,7 @@ export default function Calendar() {
                               onDragStart={(e) => beginDrag(e, r.id, d)}
                               title="Drag to move this leave request"
                             >
-                              {r.status === 'pending' ? 'Pending' : t.chip}
+                              {r.status === 'pending' ? 'Pending' : leaveLabel(r, false)}
                             </button>
                           );
                         })}
@@ -267,7 +278,7 @@ export default function Calendar() {
                           <span>({h.note})</span>
                         </div>
                       )}
-                      {inMonth && shown.map((r) => chip(r, `${firstName(state, r.employeeId)} - ${typeById(r.typeId).short}`, d))}
+                      {inMonth && shown.map((r) => chip(r, leaveLabel(r), d))}
                       {inMonth && more > 0 && (
                         <button className="more-btn" onClick={() => setDayList(d)}>
                           +{more} more
@@ -306,10 +317,10 @@ export default function Calendar() {
           <dl className="detail-list compact">
             <dt>Employee</dt>
             <dd>
-              {personName(state, sel.employeeId)} · {personOf(state, sel.employeeId)?.dept}
+              {sel.employeeId === MANAGER.id || showNames ? `${personName(state, sel.employeeId)} · ${personOf(state, sel.employeeId)?.dept}` : privacy === 'countOnly' ? '1 employee' : 'Hidden by organisation policy'}
             </dd>
             <dt>Type</dt>
-            <dd>{typeById(sel.typeId).name}</dd>
+            <dd>{sel.employeeId === MANAGER.id || showTypes ? typeById(sel.typeId).name : 'Hidden by organisation policy'}</dd>
             <dt>Dates</dt>
             <dd>{fmtDatesLong(sel.dates)}</dd>
             <dt>Status</dt>
@@ -332,7 +343,7 @@ export default function Calendar() {
                     setSel(r);
                   }}
                 >
-                  {personName(state, r.employeeId)} — {typeById(r.typeId).short}
+                  {leaveLabel(r)}
                   {r.status === 'pending' ? ' (pending)' : ''}
                 </button>
               </li>

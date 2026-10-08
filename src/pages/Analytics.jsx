@@ -2,15 +2,16 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarDays } from 'lucide-react';
 import { useStore } from '../store/StoreContext';
-import { analytics } from '../lib/calc';
-import { MONTHS, TODAY, year } from '../lib/dates';
-import { PageTitle, Select, StatCard } from '../components/ui';
+import { analytics, personName } from '../lib/calc';
+import { typeById, MANAGER } from '../lib/constants';
+import { fmtDatesShort, monthIdx, MONTHS, TODAY, year } from '../lib/dates';
+import { Modal, PageTitle, Select, StatCard, StatusPill } from '../components/ui';
 import { Donut, GroupedBars, LineChart } from '../components/Charts';
 
 const ACT = [
   { key: 'submitted', label: 'Submitted', color: '#7c4dff' },
   { key: 'approved', label: 'Approved', color: '#3b82f6' },
-  { key: 'rejected', label: 'Rejected', color: '#ec4899' },
+  { key: 'rejected', label: 'Declined', color: '#ec4899' },
   { key: 'cancelled', label: 'Cancelled', color: '#fb923c' },
 ];
 
@@ -33,12 +34,21 @@ export default function Analytics() {
   const [tab, setTab] = useState('annual');
   const [distMode, setDistMode] = useState('pct');
   const [actMode, setActMode] = useState('no');
+  const [detail, setDetail] = useState(null);
 
   const A = useMemo(() => analytics(state, yr, month === 'all' ? 'all' : +month), [state, yr, month]);
   const top = A.perEmp(tab).slice(0, 5);
   const topMax = Math.max(1, ...top.map((t) => t.days));
   const distTotal = A.dist.reduce((n, d) => n + d.count, 0);
   const months = A.monthly.map((x) => x.m);
+  const periodRequests = state.requests.filter((request) => request.employeeId !== MANAGER.id && year(request.start) === yr && (month === 'all' || monthIdx(request.start) === +month));
+  const detailConfig = {
+    total: { title: 'All leave requests', rows: periodRequests },
+    approved: { title: 'Employees with approved leave', rows: periodRequests.filter((request) => request.status === 'approved') },
+    pending: { title: 'Pending approvals', rows: periodRequests.filter((request) => request.status === 'pending') },
+    sick: { title: 'Approved medical leave', rows: periodRequests.filter((request) => request.status === 'approved' && request.typeId === 'sick') },
+    unpaid: { title: 'Approved unpaid leave', rows: periodRequests.filter((request) => request.status === 'approved' && request.typeId === 'unpaid') },
+  };
 
   const actSeries = ACT.map((s) => ({
     ...s,
@@ -58,7 +68,7 @@ export default function Analytics() {
       ['Total Unpaid Leave (days)', A.unpaid],
       [],
       ['Monthly Activity'],
-      ['Month', 'Submitted', 'Approved', 'Rejected', 'Cancelled'],
+      ['Month', 'Submitted', 'Approved', 'Declined', 'Cancelled'],
       ...A.monthly.map((x) => [MONTHS[x.m], x.submitted, x.approved, x.rejected, x.cancelled]),
       [],
       ['Top 5 Employees by Selected Leave Type'],
@@ -117,13 +127,13 @@ export default function Analytics() {
       </div>
 
       <div className="grid-5">
-        <StatCard label="Total Leave Requests">{A.total}</StatCard>
-        <StatCard label="Employee on Leave">{A.onLeave}</StatCard>
-        <StatCard label="Pending Approvals" onClick={() => nav('/approvals')}>
+        <StatCard label="Total Leave Requests" onClick={() => setDetail('total')}>{A.total}</StatCard>
+        <StatCard label="Employee on Leave" onClick={() => setDetail('approved')}>{A.onLeave}</StatCard>
+        <StatCard label="Pending Approvals" onClick={() => setDetail('pending')}>
           {A.pending}
         </StatCard>
-        <StatCard label="Highest MC Leave">{A.highestMc}</StatCard>
-        <StatCard label="Total Unpaid Leave">{A.unpaid} days</StatCard>
+        <StatCard label="Highest MC Leave" onClick={() => setDetail('sick')}>{A.highestMc}</StatCard>
+        <StatCard label="Total Unpaid Leave" onClick={() => setDetail('unpaid')}>{A.unpaid} days</StatCard>
       </div>
 
       <div className="an-row">
@@ -225,6 +235,26 @@ export default function Analytics() {
           <GroupedBars months={months} series={actSeries} percent={actMode === 'pct'} />
         </section>
       </div>
+
+      {detail && (
+        <Modal title={detailConfig[detail].title} onClose={() => setDetail(null)} width={760}>
+          <div className="table-wrap analytics-detail-table">
+            <table className="mini-table">
+              <thead><tr><th>Employee</th><th>Type</th><th>Dates</th><th>Status</th></tr></thead>
+              <tbody>
+                {detailConfig[detail].rows.length ? detailConfig[detail].rows.map((request) => (
+                  <tr key={request.id}>
+                    <td>{personName(state, request.employeeId)}</td>
+                    <td>{typeById(request.typeId).short}</td>
+                    <td>{fmtDatesShort(request.dates)}</td>
+                    <td><StatusPill request={request} /></td>
+                  </tr>
+                )) : <tr><td colSpan={4}>No matching records for this period.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
