@@ -12,14 +12,13 @@ export function leaveDates(start, end, type, holidays) {
   return rangeDates(start, end).filter((d) => (type.calendarDays ? true : !isWeekend(d) && !hs.has(d)));
 }
 
-export const displayStatus = (r) => (r.status === 'approved' && r.end < TODAY ? 'completed' : r.status);
+export const displayStatus = (r) => r.status;
 
 export const STATUS_LABEL = {
   pending: 'Pending',
   approved: 'Approved',
-  rejected: 'Declined',
+  rejected: 'Rejected',
   cancelled: 'Cancelled',
-  completed: 'Completed',
 };
 
 export const isLive = (r) => r.status === 'pending' || r.status === 'approved';

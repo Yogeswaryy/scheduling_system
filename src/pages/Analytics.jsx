@@ -11,7 +11,7 @@ import { Donut, GroupedBars, LineChart } from '../components/Charts';
 const ACT = [
   { key: 'submitted', label: 'Submitted', color: '#7c4dff' },
   { key: 'approved', label: 'Approved', color: '#3b82f6' },
-  { key: 'rejected', label: 'Declined', color: '#ec4899' },
+  { key: 'rejected', label: 'Rejected', color: '#ec4899' },
   { key: 'cancelled', label: 'Cancelled', color: '#fb923c' },
 ];
 
@@ -72,7 +72,7 @@ export default function Analytics() {
       ['Total Unpaid Leave (days)', A.unpaid],
       [],
       ['Monthly Activity'],
-      ['Month', 'Submitted', 'Approved', 'Declined', 'Cancelled'],
+      ['Month', 'Submitted', 'Approved', 'Rejected', 'Cancelled'],
       ...A.monthly.map((x) => [MONTHS[x.m], x.submitted, x.approved, x.rejected, x.cancelled]),
       [],
       ['Top 5 Employees by Selected Leave Type'],

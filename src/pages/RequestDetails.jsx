@@ -10,7 +10,7 @@ function Tracker({ req }) {
   const decided = req.history.find((h) => ['Approved', 'Rejected', 'Cancelled'].includes(h.action));
   const submitted = req.history.find((h) => h.action === 'Submitted');
   const pending = req.status === 'pending';
-  const outcome = decided?.action === 'Rejected' ? 'Declined' : decided?.action || 'Approved/Declined';
+  const outcome = decided?.action || 'Approved/Rejected';
   const tone = !decided ? 'idle' : decided.action === 'Approved' ? 'ok' : decided.action === 'Rejected' ? 'bad' : 'grey';
   // Wireframe rule: a circle is only filled once that step is completed.
   return (

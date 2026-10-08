@@ -75,7 +75,10 @@ export function seedState() {
     { e: 'Amanda', t: 'annual', s: '2026-10-12', f: '2026-10-14', status: 'pending', sub: '2026-10-02T10:15:00' },
     { e: 'Kumar', t: 'sick', s: '2026-10-16', f: '2026-10-16', status: 'pending', sub: '2026-10-05T08:42:00' },
     { e: 'Mia', t: 'emergency', s: '2026-10-15', f: '2026-10-16', status: 'pending', sub: '2026-10-05T16:20:00' },
-    { e: 'Jason', t: 'unpaid', s: '2026-10-15', f: '2026-10-15', status: 'pending', sub: '2026-10-04T13:05:00' },
+    { e: 'Jason', t: 'unpaid', s: '2026-10-14', f: '2026-10-16', status: 'pending', sub: '2026-10-04T13:05:00' },
+    { e: 'Ethan', t: 'annual', s: '2026-10-19', f: '2026-10-20', status: 'pending', sub: '2026-10-06T09:20:00' },
+    { e: 'Priya', t: 'sick', s: '2026-10-21', f: '2026-10-21', status: 'pending', sub: '2026-10-06T11:05:00' },
+    { e: 'Arjit', t: 'emergency', s: '2026-10-22', f: '2026-10-23', status: 'pending', sub: '2026-10-07T14:30:00' },
   ];
   explicit.forEach((x) => add({ employeeId: E[x.e], typeId: x.t, start: x.s, end: x.f, status: x.status, submittedAt: x.sub }));
   const alternativeRequest = requests.find((r) => r.employeeId === E.Amanda && r.status === 'pending');

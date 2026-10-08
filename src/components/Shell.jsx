@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, Navigate } from 'react-router-dom';
-import { BadgeCheck, Bell, CalendarClock, CalendarDays, CheckCircle2, FileText, Home, LogOut, User, Users } from 'lucide-react';
+import { BadgeCheck, CalendarDays, FileText, Home, LogOut, User, Users } from 'lucide-react';
 import { useStore } from '../store/StoreContext';
 import { Confirm, Toasts } from './ui';
 import DecisionHost from './DecisionHost';
+import pulseMark from '../assets/pulse-mark.png';
 
 const NAV = [
   { to: '/', label: 'Home', icon: Home, match: (p) => p === '/' },
@@ -34,7 +35,6 @@ export default function Shell() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [confirmOut, setConfirmOut] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [scrubTarget, setScrubTarget] = useState(null);
   const sidebarScrub = useRef({ pointerId: null, target: null });
   const suppressScrubClick = useRef(false);
@@ -74,29 +74,6 @@ export default function Shell() {
     }
   };
 
-  const requestEvents = state.requests
-    .flatMap((request) => request.history.map((event) => ({ ...event, request })))
-    .sort((a, b) => b.at.localeCompare(a.at));
-  const latestDecision = requestEvents.find((event) => ['Approved', 'Rejected', 'Cancelled'].includes(event.action) && event.request.employeeId === 'mgr');
-  const latestScheduleChange = requestEvents.find((event) => event.action === 'Rescheduled');
-  const notifications = [
-    {
-      icon: CheckCircle2,
-      title: 'Roster published',
-      body: 'The approved roster is available. Internal drafts remain hidden.',
-    },
-    latestDecision && {
-      icon: BadgeCheck,
-      title: `Leave ${latestDecision.action === 'Rejected' ? 'declined' : latestDecision.action.toLowerCase()}`,
-      body: `${latestDecision.request.id} has a new decision.`,
-    },
-    latestScheduleChange && {
-      icon: CalendarClock,
-      title: 'Schedule changed',
-      body: `${latestScheduleChange.request.id} was moved to new dates.`,
-    },
-  ].filter(Boolean);
-
   if (!state.session.loggedIn) return <Navigate to="/login" replace />;
 
   return (
@@ -115,7 +92,8 @@ export default function Shell() {
         }}
       >
         <NavLink to="/" className="logo" aria-label="Leave Management home">
-          L
+          <img src={pulseMark} alt="" aria-hidden="true" />
+          <span className="logo-word" aria-hidden="true">ULSE</span>
         </NavLink>
         <div className="side-sep" />
         <nav className="side-group">
@@ -132,37 +110,6 @@ export default function Shell() {
           </button>
         </div>
       </aside>
-      <div className="notification-center">
-        <button
-          type="button"
-          className="notification-trigger"
-          aria-label="Notifications"
-          aria-expanded={notificationsOpen}
-          onClick={() => setNotificationsOpen((open) => !open)}
-        >
-          <Bell size={19} />
-          <span>{notifications.length}</span>
-        </button>
-        {notificationsOpen && (
-          <section className="notification-panel glass" aria-label="Notifications">
-            <div className="notification-head">
-              <strong>Notifications</strong>
-              <button className="link-btn" type="button" onClick={() => setNotificationsOpen(false)}>Close</button>
-            </div>
-            <ul>
-              {notifications.map((notice) => {
-                const Icon = notice.icon;
-                return (
-                  <li key={notice.title}>
-                    <Icon size={18} />
-                    <span><b>{notice.title}</b><small>{notice.body}</small></span>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        )}
-      </div>
       <main className="main">
         <Outlet />
       </main>

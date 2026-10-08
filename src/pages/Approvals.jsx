@@ -4,8 +4,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../store/StoreContext';
 import { MANAGER, typeById } from '../lib/constants';
 import { analyseRequest } from '../lib/calc';
-import { fmtDatesLong, fmtLong } from '../lib/dates';
-import { Empty, PageTitle } from '../components/ui';
+import { fmtDatesLong, fmtDMY, fmtLong, fmtRange } from '../lib/dates';
+import { Empty, PageTitle, StatusPill } from '../components/ui';
 
 export default function Approvals() {
   const { state, actions } = useStore();
@@ -38,6 +38,77 @@ export default function Approvals() {
       </div>
     );
   }
+
+  const tableRows = pending.map((request) => ({ request, analysis: analyseRequest(state, request) }));
+
+  return (
+    <div className="page approvals approvals-table-page">
+      <PageTitle
+        right={<button className="btn" onClick={() => nav('/')}>Back to Home</button>}
+        searchPlaceholder="Ask about pending approvals, staffing coverage or replacements…"
+      >
+        Approvals
+      </PageTitle>
+
+      <section className="glass card approvals-table-card">
+        <div className="card-head">
+          <h3>Pending leave requests</h3>
+          <span className="approval-count">{pending.length} {pending.length === 1 ? 'request' : 'requests'}</span>
+        </div>
+        <div className="table-wrap">
+          <table className="mini-table approval-detail-table">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Employee ID</th>
+                <th>Type</th>
+                <th>Leave dates requested</th>
+                <th>Status</th>
+                <th>Impact</th>
+                <th>Suggested cover</th>
+                <th>Balance</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tableRows.map(({ request, analysis }) => (
+                <tr key={request.id} className={request.id === id ? 'selected' : ''}>
+                  <td><strong>{analysis.emp.name}</strong></td>
+                  <td>{analysis.emp.code}</td>
+                  <td>{typeById(request.typeId).short}</td>
+                  <td>
+                    <span
+                      className="requested-dates"
+                      tabIndex={0}
+                      aria-label={`Requested dates: ${request.dates.map(fmtDMY).join(', ')}`}
+                    >
+                      {fmtRange(request.start, request.end)}
+                      <span className="requested-dates-tooltip" role="tooltip">
+                        <strong>All requested dates</strong>
+                        <span className="requested-date-list">
+                          {request.dates.map((date) => <i key={date}>{fmtDMY(date)}</i>)}
+                        </span>
+                      </span>
+                    </span>
+                  </td>
+                  <td><StatusPill request={request} long /></td>
+                  <td><span className={`home-impact impact-${analysis.impact.toLowerCase()}`}>{analysis.impact}</span></td>
+                  <td>{analysis.suggested?.name || 'No one available'}</td>
+                  <td>{analysis.balance ? `${analysis.balance.left} ${analysis.balance.key} days left` : '—'}</td>
+                  <td>
+                    <div className="row-actions approval-table-actions">
+                      <button className="btn xs reject" onClick={() => actions.requestReject(request.id)}>Reject</button>
+                      <button className="btn xs approve" onClick={() => actions.requestApprove(request.id)}>Approve</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  );
 
   const a = analyseRequest(state, req);
   const type = typeById(req.typeId);

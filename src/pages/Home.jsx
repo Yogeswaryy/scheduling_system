@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../store/StoreContext';
 import { MANAGER, typeById } from '../lib/constants';
-import { balanceOf, coverageAlerts, dayStatus, minOnDuty, onLeaveToday, personName, teamSize } from '../lib/calc';
-import { DAYS_LONG, TODAY, addDays, fmtDM, fmtDatesLong, rangeDates, startOfWeek } from '../lib/dates';
-import { Of, PageTitle, StatCard } from '../components/ui';
+import { analyseRequest, coverageAlerts, dayStatus, minOnDuty, onLeaveToday, personName, teamSize } from '../lib/calc';
+import { DAYS_LONG, TODAY, addDays, fmtDM, fmtDMY, fmtRange, rangeDates, startOfWeek } from '../lib/dates';
+import { PageTitle, StatCard } from '../components/ui';
 import Assistant from '../components/Assistant';
 
 function greeting() {
@@ -18,42 +18,17 @@ export default function Home() {
   const nav = useNavigate();
   const [weekStart, setWeekStart] = useState(startOfWeek(TODAY));
 
-  const annual = balanceOf(state, MANAGER.id, 'annual');
-  const sick = balanceOf(state, MANAGER.id, 'sick');
-  const mine = state.requests.filter((r) => r.employeeId === MANAGER.id);
-  const upcoming = mine.filter((r) => (r.status === 'approved' || r.status === 'pending') && r.end >= TODAY).sort((a, b) => a.start.localeCompare(b.start))[0];
-  const myPending = mine.filter((r) => r.status === 'pending').length;
-
   const pending = useMemo(() => state.requests.filter((r) => r.status === 'pending' && r.employeeId !== MANAGER.id).sort((a, b) => a.start.localeCompare(b.start)), [state.requests]);
   const today = onLeaveToday(state);
   const alerts = coverageAlerts(state);
   const week = rangeDates(weekStart, addDays(weekStart, 4)).map((d) => dayStatus(state, d));
+  const visiblePending = pending.slice(0, 4);
 
   return (
     <div className="page home">
       <PageTitle>Home</PageTitle>
 
-      <div className="grid-4">
-        <StatCard label="Remaining annual leave">
-          <Of left={annual.left} total={annual.entitlement} />
-        </StatCard>
-        <StatCard label="Remaining sick leave">
-          <Of left={sick.left} total={sick.entitlement} />
-        </StatCard>
-        <StatCard label="Upcoming leave(s)" onClick={upcoming ? () => nav(`/request/${upcoming.id}`) : () => nav('/apply')}>
-          {upcoming ? fmtDatesLong(upcoming.dates) : 'None booked'}
-        </StatCard>
-        <StatCard label="My leave pending approval" onClick={() => nav('/history')}>
-          {myPending}
-        </StatCard>
-      </div>
-
-      <h2 className="greeting">
-        {greeting()}, {MANAGER.first}
-      </h2>
-      <Assistant />
-
-      <div className="grid-3">
+      <div className="grid-3 home-operational-stats">
         <StatCard label="Pending approvals" onClick={() => nav('/approvals')}>
           {pending.length}
         </StatCard>
@@ -65,48 +40,85 @@ export default function Home() {
         </StatCard>
       </div>
 
+      <h2 className="greeting">
+        {greeting()}, {MANAGER.first}
+      </h2>
+      <Assistant />
+
       <div className="home-cols">
         <section className="glass card">
           <div className="card-head">
             <h3>Requests awaiting approval</h3>
-            <button className="btn" onClick={() => nav('/approvals')}>
-              Review Approval
-            </button>
           </div>
           {pending.length === 0 ? (
             <div className="empty">All caught up. No requests are waiting.</div>
           ) : (
-            <div className="table-wrap">
-              <table className="mini-table">
+            <div className="table-wrap queue-table-wrap">
+              <table className="mini-table approval-queue-table">
+                <colgroup>
+                  <col className="queue-employee" />
+                  <col className="queue-type" />
+                  <col className="queue-dates" />
+                  <col className="queue-impact" />
+                  <col className="queue-actions" />
+                </colgroup>
                 <thead>
                   <tr>
                     <th>Employee</th>
                     <th>Type</th>
+                    <th>Leave dates requested</th>
+                    <th>Impact</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {pending.map((r) => (
-                    <tr key={r.id}>
-                      <td>{personName(state, r.employeeId)}</td>
-                      <td>{typeById(r.typeId).short}</td>
-                      <td>
-                        <div className="row-actions">
-                          <button className="btn xs" onClick={() => nav(`/approvals?id=${r.id}`)}>
-                            Review
-                          </button>
-                          <button className="btn xs reject" onClick={() => actions.requestReject(r.id)}>
-                            Reject
-                          </button>
-                          <button className="btn xs approve" onClick={() => actions.requestApprove(r.id)}>
-                            Approve
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {visiblePending.map((r) => {
+                    const impact = analyseRequest(state, r).impact;
+                    return (
+                      <tr key={r.id}>
+                        <td>{personName(state, r.employeeId)}</td>
+                        <td>{typeById(r.typeId).short}</td>
+                        <td>
+                          <span
+                            className="requested-dates"
+                            tabIndex={0}
+                            aria-label={`Requested dates: ${r.dates.map(fmtDMY).join(', ')}`}
+                          >
+                            {fmtRange(r.start, r.end)}
+                            <span className="requested-dates-tooltip" role="tooltip">
+                              <strong>All requested dates</strong>
+                              <span className="requested-date-list">
+                                {r.dates.map((date) => <i key={date}>{fmtDMY(date)}</i>)}
+                              </span>
+                            </span>
+                          </span>
+                        </td>
+                        <td><span className={`home-impact impact-${impact.toLowerCase()}`}>{impact}</span></td>
+                        <td>
+                          <div className="row-actions">
+                            <button className="btn xs" onClick={() => nav(`/approvals?id=${r.id}`)}>
+                              Review
+                            </button>
+                            <button className="btn xs reject" onClick={() => actions.requestReject(r.id)}>
+                              Reject
+                            </button>
+                            <button className="btn xs approve" onClick={() => actions.requestApprove(r.id)}>
+                              Approve
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
+            </div>
+          )}
+          {pending.length > 4 && (
+            <div className="approval-preview-more">
+              <button className="btn" onClick={() => nav('/approvals')}>
+                View {pending.length - 4} more {pending.length - 4 === 1 ? 'request' : 'requests'}
+              </button>
             </div>
           )}
         </section>

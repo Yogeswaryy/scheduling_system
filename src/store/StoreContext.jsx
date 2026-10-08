@@ -28,6 +28,35 @@ function load() {
           rosterPublishedAt: `${TODAY}T09:00:00`,
           ...s.settings,
         };
+        // Keep the current saved demo aligned with the three-day pending-request example.
+        const jasonPending = s.requests?.find(
+          (request) => request.employeeId === 'e9' && request.typeId === 'unpaid' && request.status === 'pending' && request.start === '2026-10-15'
+        );
+        if (jasonPending) {
+          jasonPending.start = '2026-10-14';
+          jasonPending.end = '2026-10-16';
+          jasonPending.dates = ['2026-10-14', '2026-10-15', '2026-10-16'];
+        }
+        // Add three pending examples to existing saved demo sessions so the
+        // four-row preview and View more state can be reviewed immediately.
+        const extraPending = [
+          { id: 'LR-DEMO-201', employeeId: 'e1', typeId: 'annual', start: '2026-10-19', end: '2026-10-20', dates: ['2026-10-19', '2026-10-20'], submittedAt: '2026-10-06T09:20:00', attachment: null },
+          { id: 'LR-DEMO-202', employeeId: 'e2', typeId: 'sick', start: '2026-10-21', end: '2026-10-21', dates: ['2026-10-21'], submittedAt: '2026-10-06T11:05:00', attachment: 'medical-certificate.pdf' },
+          { id: 'LR-DEMO-203', employeeId: 'e7', typeId: 'emergency', start: '2026-10-22', end: '2026-10-23', dates: ['2026-10-22', '2026-10-23'], submittedAt: '2026-10-07T14:30:00', attachment: null },
+        ];
+        extraPending.forEach((request) => {
+          const alreadyExists = s.requests?.some(
+            (current) => current.id === request.id || (current.employeeId === request.employeeId && current.typeId === request.typeId && current.start === request.start && current.end === request.end)
+          );
+          if (!alreadyExists) {
+            s.requests.push({
+              ...request,
+              status: 'pending',
+              reason: '',
+              history: [{ action: 'Submitted', at: request.submittedAt, by: request.employeeId }],
+            });
+          }
+        });
         return s;
       }
     }
