@@ -6,7 +6,7 @@ import { firstName, personName, personOf } from '../lib/calc';
 import { DAYS_SHORT, TODAY, addDays, addMonths, dayNum, diffDays, dow, fmtDM, fmtDMY, fmtDatesLong, fmtMonthYear, monthIdx, rangeDates, startOfWeek, year } from '../lib/dates';
 import { useStore } from '../store/StoreContext';
 import { MonthGrid, MonthNav } from '../components/Calendars';
-import { Confirm, Modal, PageTitle, StatusPill } from '../components/ui';
+import { Confirm, Modal, PageTitle, StatusPill, useTabScrub } from '../components/ui';
 import { LEAVE_TYPES } from '../lib/constants';
 
 const clampZoom = (value) => Math.max(70, Math.min(130, value));
@@ -22,6 +22,9 @@ export default function Calendar() {
   const [calendarMode, setCalendarMode] = useState('work');
   const [peopleView, setPeopleView] = useState('direct');
   const [pendingMove, setPendingMove] = useState(null);
+  const calendarModeScrub = useTabScrub(setCalendarMode);
+  const peopleViewScrub = useTabScrub(setPeopleView);
+  const calendarViewScrub = useTabScrub(setView);
 
   const favoriteIds = state.settings.calendarFavorites || ['e1', 'e2', 'e3'];
   const privacy = state.settings.leavePrivacy || 'namesAndType';
@@ -110,20 +113,30 @@ export default function Calendar() {
 
   const filterControls = (
     <div className="calendar-extra-controls">
-      <div className="calendar-toggle glass" aria-label="Calendar mode">
-        <button className={calendarMode === 'work' ? 'on' : ''} onClick={() => setCalendarMode('work')}>
+      <div
+        className="calendar-toggle glass scrub-tabs"
+        role="tablist"
+        aria-label="Calendar mode"
+        {...calendarModeScrub}
+      >
+        <button role="tab" aria-selected={calendarMode === 'work'} data-scrub-value="work" className={calendarMode === 'work' ? 'on' : ''} onClick={() => setCalendarMode('work')}>
           <BriefcaseBusiness size={15} /> Work
         </button>
-        <button className={calendarMode === 'personal' ? 'on' : ''} onClick={() => setCalendarMode('personal')}>
+        <button role="tab" aria-selected={calendarMode === 'personal'} data-scrub-value="personal" className={calendarMode === 'personal' ? 'on' : ''} onClick={() => setCalendarMode('personal')}>
           <UserRound size={15} /> Personal
         </button>
       </div>
 
-      <div className={`calendar-scope glass ${calendarMode === 'personal' ? 'disabled' : ''}`} aria-label="People view">
-        <button className={peopleView === 'favorites' ? 'on' : ''} onClick={() => setPeopleView('favorites')} disabled={calendarMode === 'personal'}>
+      <div
+        className={`calendar-scope glass scrub-tabs ${calendarMode === 'personal' ? 'disabled' : ''}`}
+        role="tablist"
+        aria-label="People view"
+        {...peopleViewScrub}
+      >
+        <button role="tab" aria-selected={peopleView === 'favorites'} data-scrub-value="favorites" className={peopleView === 'favorites' ? 'on' : ''} onClick={() => setPeopleView('favorites')} disabled={calendarMode === 'personal'}>
           <Star size={15} /> Favorites
         </button>
-        <button className={peopleView === 'direct' ? 'on' : ''} onClick={() => setPeopleView('direct')} disabled={calendarMode === 'personal'}>
+        <button role="tab" aria-selected={peopleView === 'direct'} data-scrub-value="direct" className={peopleView === 'direct' ? 'on' : ''} onClick={() => setPeopleView('direct')} disabled={calendarMode === 'personal'}>
           <UsersRound size={15} /> Direct Team
         </button>
       </div>
@@ -146,11 +159,11 @@ export default function Calendar() {
 
       <div className="cal-toolbar">
         <div>
-          <div className="seg" role="tablist" aria-label="Calendar view">
-            <button role="tab" aria-selected={view === 'day'} className={view === 'day' ? 'on' : ''} onClick={() => setView('day')}>
+          <div className="seg scrub-tabs" role="tablist" aria-label="Calendar view" {...calendarViewScrub}>
+            <button role="tab" aria-selected={view === 'day'} data-scrub-value="day" className={view === 'day' ? 'on' : ''} onClick={() => setView('day')}>
               Day
             </button>
-            <button role="tab" aria-selected={view === 'month'} className={view === 'month' ? 'on' : ''} onClick={() => setView('month')}>
+            <button role="tab" aria-selected={view === 'month'} data-scrub-value="month" className={view === 'month' ? 'on' : ''} onClick={() => setView('month')}>
               Month
             </button>
           </div>

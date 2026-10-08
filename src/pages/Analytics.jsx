@@ -5,7 +5,7 @@ import { useStore } from '../store/StoreContext';
 import { analytics, personName } from '../lib/calc';
 import { typeById, MANAGER } from '../lib/constants';
 import { fmtDatesShort, monthIdx, MONTHS, TODAY, year } from '../lib/dates';
-import { Modal, PageTitle, Select, StatCard, StatusPill } from '../components/ui';
+import { Modal, PageTitle, Select, StatCard, StatusPill, useTabScrub } from '../components/ui';
 import { Donut, GroupedBars, LineChart } from '../components/Charts';
 
 const ACT = [
@@ -15,16 +15,19 @@ const ACT = [
   { key: 'cancelled', label: 'Cancelled', color: '#fb923c' },
 ];
 
-const Toggle = ({ value, onChange }) => (
-  <div className="toggle2" role="group">
-    <button className={value === 'pct' ? 'on' : ''} onClick={() => onChange('pct')}>
-      %
-    </button>
-    <button className={value === 'no' ? 'on' : ''} onClick={() => onChange('no')}>
-      No.
-    </button>
-  </div>
-);
+const Toggle = ({ value, onChange }) => {
+  const scrub = useTabScrub(onChange);
+  return (
+    <div className="toggle2 scrub-tabs" role="tablist" aria-label="Chart value display" {...scrub}>
+      <button role="tab" aria-selected={value === 'pct'} data-scrub-value="pct" className={value === 'pct' ? 'on' : ''} onClick={() => onChange('pct')}>
+        %
+      </button>
+      <button role="tab" aria-selected={value === 'no'} data-scrub-value="no" className={value === 'no' ? 'on' : ''} onClick={() => onChange('no')}>
+        No.
+      </button>
+    </div>
+  );
+};
 
 export default function Analytics() {
   const { state } = useStore();
@@ -35,6 +38,7 @@ export default function Analytics() {
   const [distMode, setDistMode] = useState('pct');
   const [actMode, setActMode] = useState('no');
   const [detail, setDetail] = useState(null);
+  const leaveTypeScrub = useTabScrub(setTab);
 
   const A = useMemo(() => analytics(state, yr, month === 'all' ? 'all' : +month), [state, yr, month]);
   const top = A.perEmp(tab).slice(0, 5);
@@ -140,9 +144,9 @@ export default function Analytics() {
         <section className="glass card">
           <div className="card-head wrap">
             <h3>Top 5 Employees by Leave Taken</h3>
-            <div className="tabs-mini" role="tablist">
+            <div className="tabs-mini scrub-tabs" role="tablist" aria-label="Leave type" {...leaveTypeScrub}>
               {state.leaveTypes.map((t) => (
-                <button key={t.id} role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)}>
+                <button key={t.id} role="tab" aria-selected={tab === t.id} data-scrub-value={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)}>
                   {t.analytics}
                 </button>
               ))}

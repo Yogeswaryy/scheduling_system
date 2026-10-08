@@ -6,6 +6,41 @@ import { askAssistant } from '../lib/calc';
 import { useStore } from '../store/StoreContext';
 import { Check, ChevronDown, Send, X } from 'lucide-react';
 
+export function useTabScrub(onChange) {
+  const scrub = useRef({ pointerId: null, group: null });
+
+  const selectAtPointer = (event) => {
+    const tab = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-scrub-value]');
+    if (!tab || !event.currentTarget.contains(tab) || tab.disabled) return;
+    onChange(tab.dataset.scrubValue);
+  };
+
+  const finish = (event) => {
+    if (scrub.current.pointerId !== event.pointerId || scrub.current.group !== event.currentTarget) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    event.currentTarget.classList.remove('is-scrubbing');
+    scrub.current = { pointerId: null, group: null };
+  };
+
+  return {
+    onPointerDown: (event) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      const tab = event.target.closest('[data-scrub-value]');
+      if (!tab || tab.disabled) return;
+      scrub.current = { pointerId: event.pointerId, group: event.currentTarget };
+      event.currentTarget.setPointerCapture(event.pointerId);
+      event.currentTarget.classList.add('is-scrubbing');
+      onChange(tab.dataset.scrubValue);
+    },
+    onPointerMove: (event) => {
+      if (scrub.current.pointerId !== event.pointerId || scrub.current.group !== event.currentTarget) return;
+      selectAtPointer(event);
+    },
+    onPointerUp: finish,
+    onPointerCancel: finish,
+  };
+}
+
 export function Select({ value, onChange, options, ariaLabel, className = '' }) {
   const [open, setOpen] = useState(false);
   const selectedIndex = Math.max(0, options.findIndex((option) => String(option.value) === String(value)));

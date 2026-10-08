@@ -19,11 +19,14 @@ html, body, #root { min-height: 100%; }
 body {
   margin: 0;
   overflow-x: hidden;
-  background-color: #e9e6f4;
+  background-color: #cfd6ed;
   background-image:
-    radial-gradient(900px 560px at 2% 104%, #e57cf0 0%, rgba(229, 124, 240, 0) 70%),
-    radial-gradient(1000px 600px at 58% 112%, #9cbff4 0%, rgba(156, 191, 244, 0) 70%),
-    linear-gradient(135deg, #f3eef8 0%, #e5e7f4 40%, #cfdff4 100%);
+    radial-gradient(900px 620px at 2% 4%, rgba(247, 100, 188, .82) 0%, rgba(247, 100, 188, 0) 66%),
+    radial-gradient(820px 560px at 98% 5%, rgba(255, 164, 121, .72) 0%, rgba(255, 164, 121, 0) 66%),
+    radial-gradient(880px 620px at 4% 98%, rgba(177, 105, 247, .82) 0%, rgba(177, 105, 247, 0) 68%),
+    radial-gradient(980px 660px at 96% 98%, rgba(76, 161, 242, .80) 0%, rgba(76, 161, 242, 0) 70%),
+    radial-gradient(720px 480px at 55% 55%, rgba(208, 245, 239, .58) 0%, rgba(208, 245, 239, 0) 72%),
+    linear-gradient(135deg, #e6d9ee 0%, #d9dceb 45%, #c1d5ed 100%);
   background-attachment: fixed;
   font-size: 15px;
   -webkit-font-smoothing: antialiased;
@@ -71,7 +74,14 @@ a { color: inherit; }
   font-size: 34px; font-weight: 500; background: rgba(255, 255, 255, 0.7);
 }
 .logo.big { margin: 0 auto 10px; }
-.side-sep { width: 56px; height: 2px; background: rgba(255, 255, 255, 0.85); border-radius: 2px; }
+.side-sep {
+  width: 56px;
+  height: 4px;
+  flex: 0 0 4px;
+  background: rgba(255,255,255,.98);
+  border-radius: 999px;
+  box-shadow: 0 1px 4px rgba(37,30,72,.16);
+}
 .side-group { display: flex; flex-direction: column; gap: 18px; align-items: center; }
 nav.side-group { flex: 1; justify-content: flex-start; }
 .nav-btn {
@@ -80,6 +90,18 @@ nav.side-group { flex: 1; justify-content: flex-start; }
 }
 .nav-btn:hover { transform: translateY(-1px); background: #fff; }
 .nav-btn.active { background: var(--black); color: #fff; }
+.sidebar { touch-action: pan-y; }
+.sidebar.is-scrubbing { cursor: grabbing; user-select: none; -webkit-user-select: none; }
+.sidebar.is-scrubbing .nav-btn.active:not(.scrub-preview) {
+  background: rgba(255,255,255,.72);
+  color: var(--ink);
+}
+.sidebar .nav-btn.scrub-preview {
+  background: var(--black);
+  color: #fff;
+  transform: scale(.94);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 8px 18px rgba(18,16,30,.22);
+}
 .nav-tip {
   position: absolute; left: 78px; top: 50%; transform: translateY(-50%); background: var(--black); color: #fff;
   font-weight: 600; padding: 12px 18px; border-radius: 8px; white-space: nowrap; font-size: 15px; opacity: 0; pointer-events: none;
@@ -153,7 +175,7 @@ button.stat:hover { transform: translateY(-2px); background: rgba(255, 255, 255,
 .pill { display: inline-block; padding: 12px 24px; border-radius: 10px; font-weight: 700; font-size: 16px; }
 .pill-pending { background: #fdc57d; color: #3d2600; }
 .pill-approved { background: #b7f0cf; color: #08502a; }
-.pill-completed { background: #d6dcec; color: #2a3350; }
+.pill-completed { background: #b7f0cf; color: #08502a; }
 .pill-rejected { background: #ffc3cf; color: #7a0b26; }
 .pill-cancelled { background: #e2e4ec; color: #4a4f63; }
 
@@ -518,6 +540,23 @@ button.sec-item:hover { background: #fff; }
 }
 .calendar-toggle button.on,
 .calendar-scope button.on { background: var(--black); color: #fff; }
+.scrub-tabs {
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+.scrub-tabs button {
+  transition: background-color .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease;
+}
+.scrub-tabs button.on {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.24), 0 4px 12px rgba(18,16,30,.18);
+}
+.scrub-tabs.is-scrubbing { cursor: grabbing; }
+.scrub-tabs.is-scrubbing button.on {
+  transform: scale(.97);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 2px 8px rgba(18,16,30,.22);
+}
 .calendar-scope.disabled { opacity: 0.52; }
 .calendar-scope button:disabled { cursor: not-allowed; }
 .calendar-zoom { margin-left: auto; }
@@ -705,6 +744,18 @@ button.sec-item:hover { background: #fff; }
   box-shadow: none;
 }
 .ai-page-search input::placeholder { color: #888da2; }
+.ask input::selection,
+.ai-page-search input::selection {
+  background: rgba(15, 15, 20, .88);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, .24);
+}
+.ask input::-moz-selection,
+.ai-page-search input::-moz-selection {
+  background: rgba(15, 15, 20, .88);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, .24);
+}
 .ai-page-search:focus-within {
   background: rgba(255,255,255,.78);
   border-color: rgba(20,20,31,.22);
@@ -963,7 +1014,7 @@ button.sec-item:hover { background: #fff; }
 }
 .pill-pending { background: #fff0cf; color: #8a5600; border: 1px solid #e5ad45; }
 .pill-approved { background: #d9f7e5; color: #08743d; border: 1px solid #6bc994; }
-.pill-completed { background: #e8eaf0; color: #3d4354; border: 1px solid #aeb4c3; }
+.pill-completed { background: #d9f7e5; color: #08743d; border: 1px solid #6bc994; }
 .pill-rejected { background: #ffe1e7; color: #a41538; border: 1px solid #e98ba2; }
 .pill-cancelled { background: #f0f0f2; color: #555762; border: 1px solid #bfc1c9; }
 
@@ -1033,4 +1084,73 @@ button.sec-item:hover { background: #fff; }
   background: #24242c;
   border-color: #24242c;
   color: #fff;
+}
+
+/* AI prompt results: themed glass rows instead of browser-style blue links. */
+.answer ul,
+.ai-page-results ul { gap: 7px; }
+.answer li,
+.ai-page-results li { padding: 0; }
+.answer a,
+.ai-page-results a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid rgba(255,255,255,.82);
+  border-radius: 10px;
+  background: rgba(255,255,255,.48);
+  color: var(--ink);
+  font-weight: 650;
+  text-decoration: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.76), 0 5px 14px rgba(32,28,61,.08);
+  transition: transform .14s ease, background-color .14s ease, color .14s ease, box-shadow .14s ease;
+}
+.answer a::after,
+.ai-page-results a::after {
+  content: '→';
+  margin-left: auto;
+  font-size: 15px;
+  font-weight: 800;
+}
+.answer a:hover,
+.answer a:focus-visible,
+.ai-page-results a:hover,
+.ai-page-results a:focus-visible {
+  background: var(--black);
+  color: #fff;
+  text-decoration: none;
+  transform: translateX(3px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.24), 0 8px 18px rgba(20,16,40,.18);
+}
+
+/* Approval detail emphasis: compact Liquid Glass status and risk badges. */
+.approvals .detail-list dd.v-pending,
+.approvals .detail-list dd.impact-high,
+.approvals .detail-list dd.impact-medium,
+.approvals .detail-list dd.impact-low {
+  width: fit-content;
+  padding: 7px 12px;
+  border: 1px solid rgba(255,255,255,.82);
+  border-radius: 10px;
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.82), 0 7px 18px rgba(32,28,61,.11);
+}
+.approvals .detail-list dd.v-pending {
+  background: rgba(255,224,160,.48);
+  color: #a86700;
+}
+.approvals .detail-list dd.impact-high {
+  background: rgba(255,190,205,.46);
+  color: #d71948;
+}
+.approvals .detail-list dd.impact-medium {
+  background: rgba(255,224,160,.48);
+  color: #a86700;
+}
+.approvals .detail-list dd.impact-low {
+  background: rgba(185,241,211,.48);
+  color: #08743d;
 }
